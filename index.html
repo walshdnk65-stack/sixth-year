@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sixth Year — Leaving Cert Study Planner</title>
+<meta name="description" content="Timetable, study tracker, planner and homework diary for Irish Leaving Cert students.">
+<meta name="theme-color" content="#f4f6f8" id="themeColor">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sixth Year">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./app.css?v=6">
+</head>
+<body>
+
+<div class="shell-top">
+  <header class="top">
+    <div class="titles">
+      <div class="title" id="hdrTitle">Today</div>
+      <div class="sub" id="hdrSub"></div>
+    </div>
+    <button class="hbtn" id="btnTheme" aria-label="Switch between light and dark">
+      <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.2 8.2 0 1 0 20 14.2Z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5"/></svg>
+    </button>
+    <button class="hbtn" id="btnBell" aria-label="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2 7.5-2 7.5h16s-2-1.5-2-7.5Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+      <span class="dot"></span>
+    </button>
+  </header>
+  <button class="nowbar" id="nowBar" data-action="open-timetable" hidden></button>
+</div>
+
+<main>
+
+  <!-- ============ TODAY ============ -->
+  <section class="view" id="view-today">
+    <div id="setupBanner"></div>
+
+    <div class="stack">
+      <div class="card hero">
+        <div class="card-head">
+          <h2>Leaving Cert</h2>
+          <span class="side" id="examDateLabel"></span>
+        </div>
+        <div class="count">
+          <span class="days" id="examDays">—</span>
+          <span class="unit" id="examUnit">days to go</span>
+        </div>
+        <div class="small muted" id="examBreakdown" style="margin-bottom:12px"></div>
+        <div class="track"><i id="yearBar" style="width:0%"></i></div>
+        <div class="track-label" id="yearLabel"></div>
+      </div>
+
+      <div class="card" id="cardTodayClasses" hidden>
+        <div class="card-head">
+          <h2>Today's classes</h2>
+          <button class="link" data-action="open-timetable">Timetable</button>
+        </div>
+        <div id="todayClasses"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Today's study</h2>
+          <span class="side" id="goalLabel"></span>
+        </div>
+        <div class="track info"><i id="goalBar" style="width:0%"></i></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary grow" data-go="study">Start a session</button>
+          <button class="btn subtle grow" data-go="homework">Add homework</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Due soon</h2>
+          <button class="link" data-go="homework">All homework</button>
+        </div>
+        <div id="todayDue"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Planned study</h2>
+          <button class="link" data-go="plan">Edit plan</button>
+        </div>
+        <div id="todayPlan"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Needs attention</h2>
+          <span class="side">subjects going quiet</span>
+        </div>
+        <div id="neglected"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOMEWORK ============ -->
+  <section class="view" id="view-homework">
+    <div class="toolbar">
+      <button class="btn primary grow" id="btnAddHw">+ Add homework</button>
+      <button class="btn subtle" id="btnToggleDone">Done</button>
+    </div>
+    <div id="hwList"></div>
+  </section>
+
+  <!-- ============ PLAN (timetable + study plan) ============ -->
+  <section class="view" id="view-plan">
+    <div class="seg" id="planSeg">
+      <button data-plantab="timetable">Timetable</button>
+      <button data-plantab="study">Study plan</button>
+    </div>
+
+    <div id="planTimetable">
+      <div class="chips" id="ttDays"></div>
+      <div id="ttList"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn subtle block" data-action="edit-slots">Edit time slots</button>
+      </div>
+      <p class="hint" style="margin-top:10px">
+        Tap any period to set the subject, room and teacher. Time slots are yours to
+        shape — change the times, rename them, add or remove periods to match your school.
+      </p>
+    </div>
+
+    <div id="planStudy">
+      <div class="card">
+        <div class="card-head">
+          <h2>Weekly study plan</h2>
+          <span class="side" id="planTotal"></span>
+        </div>
+        <p class="hint">
+          Evening blocks that repeat every week. Auto-fill spreads your daily goal across
+          your subjects, leaning on the ones you have neglected and the ones with homework due.
+        </p>
+        <div class="row">
+          <button class="btn primary grow" id="btnAutoPlan">Auto-fill week</button>
+          <button class="btn subtle" id="btnAddBlock">+ Block</button>
+          <button class="btn ghost" id="btnClearPlan">Clear</button>
+        </div>
+      </div>
+      <div id="planList"></div>
+    </div>
+  </section>
+
+  <!-- ============ STUDY ============ -->
+  <section class="view" id="view-study">
+    <div class="stack">
+      <div class="card timer-card">
+        <div class="seg" id="timerModeSeg">
+          <button data-tmode="pomodoro">Pomodoro</button>
+          <button data-tmode="stopwatch">Stopwatch</button>
+        </div>
+        <div class="dial" id="dial">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track-ring" cx="60" cy="60" r="52" fill="none" stroke-width="8"></circle>
+            <circle class="prog" id="dialProg" cx="60" cy="60" r="52" fill="none" stroke-width="8"
+                    stroke-dasharray="326.7" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="readout">
+            <div class="time" id="dialTime">25:00</div>
+            <div class="mode" id="dialMode">Focus</div>
+          </div>
+        </div>
+        <div class="focus-subject" id="focusSubject"></div>
+        <div class="timer-actions">
+          <button class="btn primary" id="btnTimer">Start</button>
+          <button class="btn subtle" id="btnTimerReset">Reset</button>
+          <button class="btn subtle" id="btnLogManual">Log time</button>
+        </div>
+        <div class="focus-note" id="focusNote">Phone face down. The app will nudge you when the block ends.</div>
+        <div class="row" style="justify-content:center;margin-top:12px">
+          <button class="link" id="btnFocus">Enter focus mode</button>
+          <button class="btn subtle" id="btnFocusExit">Leave focus mode</button>
+        </div>
+      </div>
+
+      <div class="card" id="timerSetupCard">
+        <label class="field">
+          <span>Subject</span>
+          <select id="timerSubject"></select>
+        </label>
+        <label class="field">
+          <span>Topic (optional)</span>
+          <input id="timerTopic" placeholder="e.g. Poetry — Plath, or Trigonometry Q4">
+        </label>
+        <div class="grid2" id="pomoSettings">
+          <label class="field">
+            <span>Focus minutes</span>
+            <input type="number" id="focusMins" min="5" max="120" step="5" inputmode="numeric">
+          </label>
+          <label class="field">
+            <span>Break minutes</span>
+            <input type="number" id="breakMins" min="1" max="30" step="1" inputmode="numeric">
+          </label>
+        </div>
+      </div>
+
+      <div class="card" id="sessionsCard">
+        <div class="card-head"><h2>Recent sessions</h2><span class="side">tap one to add a note</span></div>
+        <div id="sessionList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="view" id="view-stats">
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h2>This week</h2><span class="side" id="weekTotal"></span></div>
+        <div class="week" id="weekChart"></div>
+      </div>
+
+      <div class="card">
+        <div class="stats" id="statTiles"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Hours by subject</h2><span class="side" id="subjRange">last 30 days</span></div>
+        <div id="subjectBars"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Test results</h2><button class="link" data-action="add-result">+ Add result</button></div>
+        <div id="resultsList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>CAO points estimate</h2><span class="side" id="pointsTotal"></span></div>
+        <div class="seg" id="pointsSrc">
+          <button data-psrc="target">Target grades</button>
+          <button data-psrc="results">Latest results</button>
+        </div>
+        <p class="hint" id="pointsHint"></p>
+        <div id="pointsRows"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>CAO courses</h2><button class="link" data-action="add-course">+ Add course</button></div>
+        <p class="hint">Last year's points against your current estimate.</p>
+        <div id="coursesList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SETUP ============ -->
+  <section class="view" id="view-setup">
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h2>You</h2></div>
+        <label class="field"><span>Name</span><input id="setName" placeholder="Your name" autocomplete="given-name"></label>
+        <div class="grid2">
+          <label class="field"><span>Leaving Cert starts</span><input type="date" id="setExam"></label>
+          <label class="field"><span>Daily goal (mins)</span><input type="number" id="setGoal" min="0" max="720" step="15" inputmode="numeric"></label>
+        </div>
+        <div class="grid2">
+          <label class="field"><span>Study starts at</span><input type="time" id="setStudyStart"></label>
+          <label class="field"><span>Study ends by</span><input type="time" id="setStudyEnd"></label>
+        </div>
+        <label class="field"><span>Appearance</span>
+          <select id="setTheme">
+            <option value="system">Match my phone</option>
+            <option value="light">Always light</option>
+            <option value="dark">Always dark</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Reading comfort</h2></div>
+        <label class="field"><span>Text size</span>
+          <select id="setTextSize">
+            <option value="normal">Normal</option>
+            <option value="large">Large</option>
+            <option value="larger">Larger</option>
+          </select>
+        </label>
+        <div class="switch"><span>Easier-reading font</span><span class="ctl"><input type="checkbox" id="setFont"></span></div>
+        <p class="hint" style="margin:10px 0 0">
+          Uses Atkinson Hyperlegible if your device has it, otherwise Verdana, with looser
+          line spacing.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>School day</h2><button class="link" data-action="edit-slots">Edit time slots</button></div>
+        <p class="hint" id="slotSummary"></p>
+        <button class="btn subtle block" data-action="open-timetable">Open timetable</button>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Subjects</h2><button class="link" id="btnAddSubject">+ Add subject</button></div>
+        <div id="subjectList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Notifications</h2></div>
+        <p class="hint" id="permState"></p>
+        <div class="switch"><span>Homework reminders</span><span class="ctl"><input type="checkbox" id="ntfHomework"></span></div>
+        <div class="switch"><span>Daily plan</span>
+          <span class="ctl">
+            <input type="time" id="ntfDailyTime">
+            <input type="checkbox" id="ntfDaily">
+          </span>
+        </div>
+        <div class="switch"><span>Study block reminders</span><span class="ctl"><input type="checkbox" id="ntfBlocks"></span></div>
+        <div class="switch"><span>Weekly countdown</span><span class="ctl"><input type="checkbox" id="ntfWeekly"></span></div>
+        <div class="switch"><span>Timer alerts</span><span class="ctl"><input type="checkbox" id="ntfTimer"></span></div>
+        <label class="field" style="margin-top:14px">
+          <span>Warn me before homework is due</span>
+          <select id="ntfLead">
+            <option value="1440,120">The day before, and 2 hours before</option>
+            <option value="2880,1440,120">2 days, 1 day, and 2 hours before</option>
+            <option value="1440">The day before only</option>
+            <option value="120">2 hours before only</option>
+          </select>
+        </label>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary grow" id="btnEnableNtf">Turn on notifications</button>
+          <button class="btn subtle" id="btnTestNtf">Test</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Your data</h2></div>
+        <p class="hint">
+          Everything stays on this device — nothing is uploaded. Export a backup before
+          changing phone or clearing your browser.
+        </p>
+        <div class="row">
+          <button class="btn subtle grow" id="btnExport">Export backup</button>
+          <button class="btn subtle grow" id="btnImport">Import backup</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn danger block" id="btnReset">Reset everything</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Install on your phone</h2></div>
+        <p class="hint">
+          Install it to the home screen so reminders keep working when the app is closed.
+          iPhone: Share → Add to Home Screen (iOS 16.4+). Android: menu → Install app.
+        </p>
+        <button class="btn primary block" id="btnInstall" hidden>Install app</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs" id="tabs">
+  <div class="brand"><img src="./icon.svg" alt=""> Sixth Year</div>
+  <button data-view="today"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 4.2l8.5 6.4V20a.8.8 0 0 1-.8.8h-4.4v-6h-6.6v6H4.3a.8.8 0 0 1-.8-.8Z"/></svg></span>Today</button>
+  <button data-view="homework"><span class="ico"><svg viewBox="0 0 24 24"><path d="M6 3.8h8.5L18.5 8v12.2H6Z"/><path d="M14 3.8V8h4.5M9 12.5h6M9 16h4"/></svg></span>Homework</button>
+  <button data-view="plan"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.2" width="17" height="15.4" rx="2.4"/><path d="M3.5 10h17M8.5 3.4v3.4M15.5 3.4v3.4"/></svg></span>Plan</button>
+  <button data-view="study"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.4" r="7.4"/><path d="M12 9.6v3.8l2.6 1.7M9.4 2.8h5.2"/></svg></span>Study</button>
+  <button data-view="stats"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4.5 20.2V11M10 20.2V4.6M15.5 20.2v-6.4M21 20.2H3"/></svg></span>Stats</button>
+  <button data-view="setup"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.4v2.3M12 18.3v2.3M3.4 12h2.3M18.3 12h2.3M5.9 5.9l1.6 1.6M16.5 16.5l1.6 1.6M18.1 5.9l-1.6 1.6M7.5 16.5l-1.6 1.6"/></svg></span>Setup</button>
+</nav>
+
+<div class="modal-back" id="modalBack" hidden><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="./store.js?v=6"></script>
+<script src="./app.js?v=6"></script>
+</body>
+</html>
