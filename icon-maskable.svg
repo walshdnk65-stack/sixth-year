@@ -1,5 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" fill="#0e1116"/>
-  <path d="M52 68 L96 50 L140 68 L96 86 Z" fill="#57d9a3"/>
-  <path d="M64 79 L64 112 C64 112 77 125 96 125 C115 125 128 112 128 112 L128 79 L96 92 Z" fill="#3b82f6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Sixth Year">
+  <!-- Full bleed: the launcher applies its own mask, so no rounded corners here -->
+  <rect width="200" height="200" fill="#14213D"/>
+  <!-- Artwork kept to 50% so it survives an aggressive circular crop -->
+  <g transform="translate(50 50) scale(0.5)">
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#F4F2ED" stroke-opacity=".2" stroke-width="16"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#F4F2ED" stroke-width="16" stroke-linecap="butt"
+            stroke-dasharray="344 478" transform="rotate(-90 100 100)"/>
+    <circle cx="100" cy="100" r="26" fill="#D9A441"/>
+  </g>
 </svg>

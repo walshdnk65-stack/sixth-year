@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="96" height="96" role="img" aria-label="Sixth Year">
+  <!-- Notification badges get masked to a single colour, so this is the mark
+       alone on transparency, with a heavier stroke to survive 24px rendering -->
+  <circle cx="100" cy="100" r="74" fill="none" stroke="#FFFFFF" stroke-width="22"
+          stroke-linecap="butt" stroke-dasharray="335 465" transform="rotate(-90 100 100)"/>
+  <circle cx="100" cy="100" r="30" fill="#FFFFFF"/>
+</svg>

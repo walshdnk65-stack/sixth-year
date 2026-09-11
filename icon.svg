@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="42" fill="#0e1116"/>
-  <path d="M40 62 L96 38 L152 62 L96 86 Z" fill="#57d9a3"/>
-  <path d="M56 76 L56 118 C56 118 72 134 96 134 C120 134 136 118 136 118 L136 76 L96 94 Z" fill="#3b82f6"/>
-  <path d="M152 62 L152 104" stroke="#57d9a3" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="152" cy="112" r="9" fill="#57d9a3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Sixth Year">
+  <rect width="200" height="200" rx="45" fill="#14213D"/>
+  <!-- Ring and centre sit at 62% of the tile, as in the source markup -->
+  <g transform="translate(38 38) scale(0.62)">
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#F4F2ED" stroke-opacity=".2" stroke-width="16"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#F4F2ED" stroke-width="16" stroke-linecap="butt"
+            stroke-dasharray="344 478" transform="rotate(-90 100 100)"/>
+    <circle cx="100" cy="100" r="26" fill="#D9A441"/>
+  </g>
 </svg>

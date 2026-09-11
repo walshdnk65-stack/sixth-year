@@ -1558,7 +1558,7 @@
   function notifyNow(title, body, view) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     var opts = {
-      body: body, icon: './icon.svg', badge: './icon-maskable.svg',
+      body: body, icon: './icon.svg', badge: './badge.svg',
       tag: 'now-' + view, renotify: true, data: { view: view || 'today' }
     };
     if (swReg) swReg.showNotification(title, opts);
@@ -1671,7 +1671,7 @@
         .forEach(function (r) {
           try {
             swReg.showNotification(r.title, {
-              body: r.body, tag: r.tag, icon: './icon.svg', badge: './icon-maskable.svg',
+              body: r.body, tag: r.tag, icon: './icon.svg', badge: './badge.svg',
               showTrigger: new window.TimestampTrigger(r.at),
               data: { view: r.view, key: r.key, scheduled: true }
             });
@@ -1691,7 +1691,7 @@
 
   function notifyQueued(r) {
     var opts = {
-      body: r.body, icon: './icon.svg', badge: './icon-maskable.svg',
+      body: r.body, icon: './icon.svg', badge: './badge.svg',
       tag: r.tag, renotify: true, data: { view: r.view, key: r.key }
     };
     if (swReg) swReg.showNotification(r.title, opts);

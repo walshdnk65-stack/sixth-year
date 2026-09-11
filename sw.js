@@ -1,10 +1,10 @@
 /* Service worker: offline shell + reminders that fire when the app is closed. */
-importScripts('./store.js?v=6');
+importScripts('./store.js?v=7');
 
-var CACHE = 'sixth-year-v6';
+var CACHE = 'sixth-year-v7';
 var SHELL = [
-  './', './index.html', './app.css?v=6', './app.js?v=6', './store.js?v=6',
-  './manifest.webmanifest', './icon.svg', './icon-maskable.svg'
+  './', './index.html', './app.css?v=7', './app.js?v=7', './store.js?v=7',
+  './manifest.webmanifest', './icon.svg', './icon-maskable.svg', './badge.svg'
 ];
 
 self.addEventListener('install', function (e) {
@@ -41,7 +41,7 @@ function showReminders() {
         body: r.body,
         tag: r.tag,
         icon: './icon.svg',
-        badge: './icon-maskable.svg',
+        badge: './badge.svg',
         renotify: true,
         requireInteraction: false,
         data: { view: r.view, key: r.key },
@@ -73,7 +73,7 @@ self.addEventListener('push', function (e) {
     if (e.data) payload.body = e.data.text();
   }
   e.waitUntil(self.registration.showNotification(payload.title, {
-    body: payload.body, icon: './icon.svg', badge: './icon-maskable.svg',
+    body: payload.body, icon: './icon.svg', badge: './badge.svg',
     tag: payload.tag || 'push', data: { view: payload.view || 'today' }
   }));
 });
