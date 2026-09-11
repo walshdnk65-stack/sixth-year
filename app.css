@@ -5,31 +5,34 @@
    ============================================================ */
 
 :root {
-  --bg: #f4f6f8;
+  --bg: #f4f2ed;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --surface-3: #e7eaef;
-  --border: rgba(16, 24, 40, 0.09);
-  --border-strong: rgba(16, 24, 40, 0.16);
-  --text: #101720;
-  --dim: #5f6b7a;
-  --faint: #8a95a3;
+  --surface-2: #efece4;
+  --surface-3: #e3ded3;
+  --border: rgba(20, 33, 61, 0.10);
+  --border-strong: rgba(20, 33, 61, 0.18);
+  --text: #14213d;
+  --dim: #5a6478;
+  --faint: #6a7383;
 
-  --accent: #0e9f6e;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(14, 159, 110, 0.12);
-  --info: #2f6feb;
-  --info-soft: rgba(47, 111, 235, 0.12);
-  --warn: #b26a00;
-  --warn-soft: rgba(214, 158, 46, 0.18);
-  --danger: #d2434a;
-  --danger-soft: rgba(210, 67, 74, 0.12);
+  /* Navy carries anything interactive; gold is the highlight. Gold is too pale
+     for text on a light ground, so --gold fills shapes and --info writes words. */
+  --accent: #14213d;
+  --accent-ink: #f4f2ed;
+  --accent-soft: rgba(20, 33, 61, 0.09);
+  --gold: #d9a441;
+  --info: #8a6414;
+  --info-soft: rgba(217, 164, 65, 0.20);
+  --warn: #a3470b;
+  --warn-soft: rgba(180, 83, 14, 0.14);
+  --danger: #c2333c;
+  --danger-soft: rgba(194, 51, 60, 0.12);
 
   --r-lg: 18px;
   --r: 13px;
   --r-sm: 10px;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px -14px rgba(16, 24, 40, 0.28);
-  --shadow-lift: 0 12px 40px -12px rgba(16, 24, 40, 0.35);
+  --shadow: 0 1px 2px rgba(20, 33, 61, 0.05), 0 8px 24px -14px rgba(20, 33, 61, 0.30);
+  --shadow-lift: 0 12px 40px -12px rgba(20, 33, 61, 0.38);
   --nav-h: 60px;
   --gutter: 16px;
   --maxw: 640px;
@@ -37,52 +40,56 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1216;
-    --surface: #171c22;
-    --surface-2: #1f252d;
-    --surface-3: #28303a;
-    --border: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.18);
-    --text: #e8eef5;
-    --dim: #9aa7b6;
-    --faint: #77828f;
+    --bg: #0e1526;
+    --surface: #141c31;
+    --surface-2: #1c2740;
+    --surface-3: #27334f;
+    --border: rgba(244, 242, 237, 0.10);
+    --border-strong: rgba(244, 242, 237, 0.20);
+    --text: #eceff6;
+    --dim: #a0aac0;
+    --faint: #7f8aa3;
 
-    --accent: #34d399;
-    --accent-ink: #04241a;
-    --accent-soft: rgba(52, 211, 153, 0.16);
-    --info: #7aa7ff;
-    --info-soft: rgba(122, 167, 255, 0.16);
-    --warn: #f0b429;
-    --warn-soft: rgba(240, 180, 41, 0.16);
+    /* Navy is the ground here, so its readable form does the interacting. */
+    --accent: #9db0e0;
+    --accent-ink: #0e1526;
+    --accent-soft: rgba(157, 176, 224, 0.16);
+    --gold: #d9a441;
+    --info: #e7c579;
+    --info-soft: rgba(231, 197, 121, 0.16);
+    --warn: #e39a4a;
+    --warn-soft: rgba(227, 154, 74, 0.16);
     --danger: #ff8189;
     --danger-soft: rgba(255, 129, 137, 0.14);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.75);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.8);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0f1216;
-  --surface: #171c22;
-  --surface-2: #1f252d;
-  --surface-3: #28303a;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --text: #e8eef5;
-  --dim: #9aa7b6;
-  --faint: #77828f;
+  --bg: #0e1526;
+  --surface: #141c31;
+  --surface-2: #1c2740;
+  --surface-3: #27334f;
+  --border: rgba(244, 242, 237, 0.10);
+  --border-strong: rgba(244, 242, 237, 0.20);
+  --text: #eceff6;
+  --dim: #a0aac0;
+  --faint: #7f8aa3;
 
-  --accent: #34d399;
-  --accent-ink: #04241a;
-  --accent-soft: rgba(52, 211, 153, 0.16);
-  --info: #7aa7ff;
-  --info-soft: rgba(122, 167, 255, 0.16);
-  --warn: #f0b429;
-  --warn-soft: rgba(240, 180, 41, 0.16);
+  /* Navy is the ground here, so its readable form does the interacting. */
+  --accent: #9db0e0;
+  --accent-ink: #0e1526;
+  --accent-soft: rgba(157, 176, 224, 0.16);
+  --gold: #d9a441;
+  --info: #e7c579;
+  --info-soft: rgba(231, 197, 121, 0.16);
+  --warn: #e39a4a;
+  --warn-soft: rgba(227, 154, 74, 0.16);
   --danger: #ff8189;
   --danger-soft: rgba(255, 129, 137, 0.14);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.75);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.8);
 }
 
 /* ============================================================
@@ -531,7 +538,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 
 .hero {
   background:
-    radial-gradient(120% 140% at 100% 0%, var(--accent-soft) 0%, transparent 60%),
+    radial-gradient(120% 140% at 100% 0%, var(--info-soft) 0%, transparent 60%),
     var(--surface);
 }
 .hero .count { display: flex; align-items: flex-end; gap: 9px; margin: 2px 0 6px; }
@@ -540,7 +547,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 
 .track { height: 7px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
 .track > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
-.track.info > i { background: var(--info); }
+.track.info > i { background: var(--gold); }
 .track-label { margin-top: 7px; color: var(--dim); font-size: 12.5px; }
 
 .banner {
@@ -661,7 +668,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 .dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .dial .track-ring { stroke: var(--surface-3); }
 .dial .prog { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
-.dial.break .prog { stroke: var(--info); }
+.dial.break .prog { stroke: var(--gold); }
 .dial .readout { position: absolute; inset: 0; display: grid; place-content: center; gap: 4px; text-align: center; }
 .dial .time { font-size: clamp(34px, 11vw, 44px); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 .dial .mode { color: var(--faint); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
@@ -734,11 +741,11 @@ body.focus-on #btnFocusExit { display: inline-flex; }
 }
 .res-row .score small { display: block; color: var(--dim); font-size: 11.5px; font-weight: 550; }
 .trend { font-size: 11.5px; font-weight: 620; }
-.trend.up { color: var(--accent); }
+.trend.up { color: var(--info); }
 .trend.down { color: var(--danger); }
 
 .course-row .gap { font-size: 12.5px; font-weight: 620; }
-.course-row .gap.hit { color: var(--accent); }
+.course-row .gap.hit { color: var(--info); }
 .course-row .gap.near { color: var(--warn); }
 .course-row .gap.miss { color: var(--danger); }
 
@@ -752,7 +759,7 @@ body.focus-on #btnFocusExit { display: inline-flex; }
 .week .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 7px; height: 100%; }
 .week .col .stem { width: 100%; min-height: 4px; border-radius: 7px 7px 4px 4px; background: var(--accent-soft); }
 .week .col .stem.has { background: var(--accent); }
-.week .col.today .stem { background: var(--info); }
+.week .col.today .stem { background: var(--gold); }
 .week .col .lbl { color: var(--faint); font-size: 11px; }
 
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

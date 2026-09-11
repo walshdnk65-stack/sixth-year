@@ -19,8 +19,14 @@
     'Classical Studies', 'Latin', 'Link Modules (LCVP)', 'Physical Education'
   ];
 
-  var COLORS = ['#57d9a3', '#5b9dff', '#f2b544', '#c88bff', '#ff8a65',
-                '#4dd0e1', '#f06292', '#9ccc65', '#ffd54f', '#7986cb'];
+  /* Subject colours, muted to sit beside the navy and gold of the logo. */
+  var COLORS = ['#d9a441', '#3e5c97', '#2f8f8f', '#8a5a9e', '#c2663b',
+                '#5e8c5a', '#b3567a', '#5b6bb5', '#b08a2e', '#4c7fa8'];
+
+  /* The palette these replaced, so subjects made before the change move across
+     instead of keeping colours from the old scheme. */
+  var LEGACY_COLORS = ['#57d9a3', '#5b9dff', '#f2b544', '#c88bff', '#ff8a65',
+                       '#4dd0e1', '#f06292', '#9ccc65', '#ffd54f', '#7986cb'];
 
   var POINTS = {
     H: { 1: 100, 2: 88, 3: 77, 4: 66, 5: 56, 6: 46, 7: 37, 8: 0 },
@@ -186,6 +192,10 @@
         if (!Array.isArray(s[k])) s[k] = d[k];
       });
       s.grades = s.grades || {};
+      s.subjects.forEach(function (sub) {
+        var old = LEGACY_COLORS.indexOf(String(sub.color).toLowerCase());
+        if (old !== -1) sub.color = COLORS[old];
+      });
       if (!s.timetable || !Array.isArray(s.timetable.slots)) s.timetable = d.timetable;
       if (!s.timetable.classes) s.timetable.classes = {};
       return s;
@@ -283,7 +293,7 @@
     else document.documentElement.removeAttribute('data-font');
     var meta = document.getElementById('themeColor');
     if (meta) {
-      meta.setAttribute('content', effectiveDark() ? '#0f1216' : '#f4f6f8');
+      meta.setAttribute('content', effectiveDark() ? '#0e1526' : '#f4f2ed');
     }
   }
 
@@ -307,7 +317,7 @@
   function classKey(day, slotId) { return day + ':' + slotId; }
   function classAt(day, slotId) { return state.timetable.classes[classKey(day, slotId)] || null; }
   function classLabel(c) { return c.subjectId ? subjectName(c.subjectId) : (c.name || 'Class'); }
-  function classColour(c) { return c.subjectId ? subjectColor(c.subjectId) : '#8a95a3'; }
+  function classColour(c) { return c.subjectId ? subjectColor(c.subjectId) : '#6f7889'; }
   /* "12" reads as Room 12; "Lab 2" or "Gym" already says what it is. */
   function roomLabel(r) { return /^\d/.test(String(r).trim()) ? 'Room ' + r : r; }
   function classCount(day) {
