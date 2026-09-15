@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon.svg">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./app.css?v=9">
+<link rel="stylesheet" href="./app.css?v=10">
 </head>
 <body>
 
@@ -92,6 +92,14 @@
         <div id="todayPlan"></div>
       </div>
 
+      <div class="card" id="cardWeakSpots" hidden>
+        <div class="card-head">
+          <h2>Weak spots</h2>
+          <button class="link" data-action="open-syllabus">Syllabus</button>
+        </div>
+        <div id="weakSpots"></div>
+      </div>
+
       <div class="card">
         <div class="card-head">
           <h2>Needs attention</h2>
@@ -116,6 +124,7 @@
     <div class="seg" id="planSeg">
       <button data-plantab="timetable">Timetable</button>
       <button data-plantab="study">Study plan</button>
+      <button data-plantab="syllabus">Syllabus</button>
     </div>
 
     <div id="planTimetable">
@@ -138,7 +147,8 @@
         </div>
         <p class="hint">
           Evening blocks that repeat every week. Auto-fill spreads your daily goal across
-          your subjects, leaning on the ones you have neglected and the ones with homework due.
+          your subjects, leaning on the ones you have neglected and the ones with homework due,
+          and names a syllabus topic for each block — weakest and least-recent first.
         </p>
         <div class="row">
           <button class="btn primary grow" id="btnAutoPlan">Auto-fill week</button>
@@ -147,6 +157,11 @@
         </div>
       </div>
       <div id="planList"></div>
+    </div>
+
+    <div id="planSyllabus">
+      <div class="chips" id="sylSubjects"></div>
+      <div id="sylBody"></div>
     </div>
   </section>
 
@@ -188,7 +203,11 @@
           <select id="timerSubject"></select>
         </label>
         <label class="field">
-          <span>Topic (optional)</span>
+          <span>Syllabus topic</span>
+          <select id="timerTopicPick"></select>
+        </label>
+        <label class="field">
+          <span>Or describe it</span>
           <input id="timerTopic" placeholder="e.g. Poetry — Plath, or Trigonometry Q4">
         </label>
         <div class="grid2" id="pomoSettings">
@@ -370,7 +389,8 @@
 <div class="modal-back" id="modalBack" hidden><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="./store.js?v=9"></script>
-<script src="./app.js?v=9"></script>
+<script src="./syllabus.js?v=10"></script>
+<script src="./store.js?v=10"></script>
+<script src="./app.js?v=10"></script>
 </body>
 </html>

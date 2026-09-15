@@ -352,7 +352,7 @@ nav.tabs .brand { display: none; }
   .group .day-head:first-child { margin-top: 0; }
   .toolbar { max-width: 520px; }
   .seg { max-width: 420px; }
-  #planTimetable, #view-plan > .card { max-width: 760px; }
+  #planTimetable, #planSyllabus, #view-plan > .card { max-width: 760px; }
   .timer-card { max-width: 420px; }
   .modal-back { padding: 32px; }
 }
@@ -657,6 +657,61 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 .slot-row:first-child { border-top: 0; }
 .slot-row .nm { flex: 1; min-width: 0; font-size: 14px; font-weight: 550; }
 .slot-row .tm { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Syllabus
+   ============================================================ */
+
+.strand-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 18px 2px 8px;
+}
+.strand-head .d { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 620; }
+.strand-head .side { color: var(--faint); font-size: 12px; }
+.strand-head label {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--dim); font-size: 12px; white-space: nowrap; cursor: pointer;
+}
+.strand-head label input[type="checkbox"] { transform: scale(1.05); }
+.strand-off .topic-row { opacity: 0.45; }
+
+.topic-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.topic-row:first-child { border-top: 0; }
+.topic-row .body { flex: 1; min-width: 0; }
+.topic-row .t { font-size: 14px; font-weight: 560; line-height: 1.35; }
+.topic-row .meta { margin-top: 2px; color: var(--dim); font-size: 12px; line-height: 1.45; }
+.topic-row .ch { flex: 0 0 auto; width: 66px; margin: 0; }
+.topic-row .ch input {
+  min-height: 36px; padding: 6px 8px;
+  font-size: 14px; text-align: center; font-variant-numeric: tabular-nums;
+}
+.topic-row .icon-btn { margin-top: 3px; }
+
+/* Confidence: tap to cycle not rated → shaky → getting there → solid */
+.rag {
+  flex: 0 0 auto;
+  width: 26px; height: 26px; margin-top: 3px;
+  border: 2px solid var(--border-strong); border-radius: 50%;
+  background: none; cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.06s ease;
+}
+.rag:active { transform: scale(0.9); }
+.rag.c1 { background: var(--danger); border-color: var(--danger); }
+.rag.c2 { background: var(--gold); border-color: var(--gold); }
+.rag.c3 { background: var(--accent); border-color: var(--accent); }
+
+.rag-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 14px;
+  margin-top: 8px; color: var(--dim); font-size: 12px;
+}
+.rag-legend i {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin-right: 5px; vertical-align: -1px;
+}
 
 /* ============================================================
    Study timer

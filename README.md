@@ -49,10 +49,38 @@ is actually on** — "Next Maths class · Tue 09:40" — worked out from your ti
 that is usually when homework is wanted. Open a class in the timetable and there is an
 *Add homework for this class* link that opens the form already filled in.
 
+**Syllabus** (Plan → Syllabus) — the official specification for each of your subjects,
+strand by strand, at the size of a single study block. Twelve subjects ship with a full
+topic list (Irish, English, Maths, Biology, Chemistry, Physics, Geography, History,
+Business, Accounting, Applied Maths, Home Economics) and the modern languages share one;
+anything else starts blank and you add the topics your class covers. For every topic you
+can:
+
+- **rate it** — tap the circle to cycle not rated → shaky → getting there → solid;
+- **map it to your book** — pick your textbook from the common ones (or type another) and
+  enter the chapter number from its contents page. Chapter numbers are never guessed for
+  you, because they differ by edition and by school;
+- **switch strands off** — options and electives your teacher is not doing come out of the
+  planner with one tick;
+- **add your own** — set texts, poets, case studies, or an entire syllabus for a subject
+  that has no built-in list.
+
+Every study session you log against a topic updates its *last studied* date, and rating
+a topic shaky puts it on the Today screen under **Weak spots**, with a Study button that
+preloads the timer.
+
 **Study plan** (Plan → Study plan) — a repeating weekly set of evening study blocks. *Auto-fill week* spreads your
 daily goal across 45-minute blocks between your study start and end times, weighting
 each subject by its priority, how long since you last studied it, and whether homework
 is due for it this week. Weekends get 25% more. You can add or delete blocks by hand.
+
+Each block is then given a **specific topic**, not just a subject: shaky and unrated
+topics first, then whatever you have not looked at for longest, nudged by how heavily
+the exam leans on it, and spread across strands so a week is not six blocks of the same
+unit. If you have mapped the chapter, the block reads "Photosynthesis · Biology Plus
+ch. 12", and the reminder ten minutes before it says the same. The Study tab's topic
+picker, the manual log and the session editor all use the same list, so a block, a
+session and a rating are talking about the same thing.
 
 **Study** — two timers behind one switch. **Pomodoro** counts down through focus and
 break blocks you size yourself and logs each completed block. **Stopwatch** counts up
@@ -154,7 +182,8 @@ nothing to push from — which is why the scheduling above is done on the device
 | --- | --- |
 | `index.html` | App shell and the six views |
 | `app.css` | Styling: design tokens, light and dark, mobile first |
-| `app.js` | State, rendering, timetable, planner, timer, reminder scheduling |
+| `app.js` | State, rendering, timetable, planner, syllabus, timer, reminder scheduling |
+| `syllabus.js` | The specification catalogue: strands, topics, exam weights, common textbooks |
 | `store.js` | IndexedDB reminder queue shared with the service worker |
 | `sw.js` | Offline cache, background reminders, notification clicks, push |
 | `manifest.webmanifest` | Install metadata |

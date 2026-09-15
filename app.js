@@ -89,6 +89,10 @@
       timetable: { slots: defaultSlots(), classes: {} },
       results: [],
       courses: [],
+      topics: {},        // topicId → { conf: 0 not rated · 1 shaky · 2 getting there · 3 solid, last: ISO }
+      books: {},         // subjectId → { book: catalogue id | 'custom' | '', custom: '', ch: { topicId: '12' } }
+      customTopics: {},  // subjectId → [{ id, title, strand, weight }]
+      skipStrands: {},   // subjectId → { strandId: true } for strands the class is not doing
       grades: {},
       timer: null,
       seeded: false
@@ -171,6 +175,7 @@
     showDone: false,
     planTab: 'timetable',
     pointsSource: 'target',
+    sylSubject: null,
     ttDay: defaultTtDay()
   };
 
@@ -198,6 +203,9 @@
       });
       if (!s.timetable || !Array.isArray(s.timetable.slots)) s.timetable = d.timetable;
       if (!s.timetable.classes) s.timetable.classes = {};
+      ['topics', 'books', 'customTopics', 'skipStrands'].forEach(function (k) {
+        if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+      });
       return s;
     } catch (e) {
       return defaults();
@@ -499,7 +507,7 @@
   function render() {
     renderHeader();
     renderNowBar();
-    if (ui.view === 'today') { renderToday(); renderTodayClasses(); }
+    if (ui.view === 'today') { renderToday(); renderTodayClasses(); renderWeakSpots(); }
     if (ui.view === 'homework') renderHomework();
     if (ui.view === 'plan') renderPlan();
     if (ui.view === 'study') renderStudy();
@@ -635,6 +643,277 @@
       '</div>';
   }
 
+  /* ---------------- Syllabus ---------------- */
+
+  var RAG_LABEL = ['Not rated — tap to rate', 'Shaky', 'Getting there', 'Solid'];
+
+  function catalogueFor(name) {
+    var cat = window.SYLLABUS;
+    if (!cat) return null;
+    var key = cat.aliases[name] || name;
+    return cat.subjects[key] || null;
+  }
+
+  /* A catalogue topic as the app sees it: the id carries the subject so the same
+     syllabus can back two subjects, and progress stays with the subject row. */
+  function catTopic(sub, st, t) {
+    return {
+      id: sub.id + ':' + st.id + ':' + t.id, title: t.title, detail: t.detail || '',
+      weight: t.weight || 1, strandId: st.id, strand: st.title, subjectId: sub.id, custom: false
+    };
+  }
+  function ownTopic(sub, t) {
+    var cat = catalogueFor(sub.name);
+    return {
+      id: t.id, title: t.title, detail: '', weight: t.weight || 2,
+      strandId: t.strand || 'mine', strand: strandTitle(cat, t.strand), subjectId: sub.id, custom: true
+    };
+  }
+  function strandTitle(cat, id) {
+    if (cat && id) {
+      for (var i = 0; i < cat.strands.length; i++) if (cat.strands[i].id === id) return cat.strands[i].title;
+    }
+    return 'My own topics';
+  }
+
+  /* Everything the planner may pick for a subject: catalogue topics at the right
+     level, minus strands the class is not doing, plus the student's own. */
+  function topicsFor(sub) {
+    var out = [];
+    var cat = catalogueFor(sub.name);
+    var skip = state.skipStrands[sub.id] || {};
+    if (cat) {
+      cat.strands.forEach(function (st) {
+        if (skip[st.id]) return;
+        st.topics.forEach(function (t) {
+          if (t.hl && sub.level !== 'H') return;
+          out.push(catTopic(sub, st, t));
+        });
+      });
+    }
+    (state.customTopics[sub.id] || []).forEach(function (t) {
+      if (t.strand && skip[t.strand]) return;
+      out.push(ownTopic(sub, t));
+    });
+    return out;
+  }
+  function allTopics() {
+    var out = [];
+    state.subjects.forEach(function (sub) { out = out.concat(topicsFor(sub)); });
+    return out;
+  }
+  function topicById(id) {
+    var all = allTopics();
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    return null;
+  }
+  function topicProgress(id) { return state.topics[id] || { conf: 0, last: null }; }
+  function markStudied(topicId, whenIso) {
+    if (!topicId) return;
+    var p = state.topics[topicId] || { conf: 0, last: null };
+    if (!p.last || new Date(whenIso) > new Date(p.last)) p.last = whenIso;
+    state.topics[topicId] = p;
+  }
+
+  function bookFor(subjectId) {
+    if (!state.books[subjectId]) state.books[subjectId] = { book: '', custom: '', ch: {} };
+    if (!state.books[subjectId].ch) state.books[subjectId].ch = {};
+    return state.books[subjectId];
+  }
+  function bookTitle(subjectId) {
+    var b = state.books[subjectId];
+    if (!b || !b.book) return '';
+    if (b.book === 'custom') return b.custom || '';
+    var cat = catalogueFor(subjectName(subjectId));
+    var hit = cat ? cat.books.filter(function (x) { return x.id === b.book; })[0] : null;
+    return hit ? hit.title : '';
+  }
+  /* "Active Maths 4 (Books 1 & 2)" → "Active Maths 4"; "Less Stress More Success — Maths" → "Less Stress More Success" */
+  function bookShort(subjectId) {
+    return bookTitle(subjectId).replace(/\s*\(.*?\)/g, '').replace(/\s+—.*$/, '').trim();
+  }
+  function chapterFor(topic) {
+    var b = state.books[topic.subjectId];
+    return (b && b.ch && b.ch[topic.id]) || '';
+  }
+  /* What a plan block or reminder calls the topic: "Photosynthesis · Biology Plus ch. 12" */
+  function topicRef(topic) {
+    var ch = chapterFor(topic);
+    if (!ch) return topic.title;
+    var bk = bookShort(topic.subjectId);
+    return topic.title + ' · ' + (bk ? bk + ' ' : '') + (/^\d/.test(ch) ? 'ch. ' : '') + ch;
+  }
+
+  /* How badly a topic wants a study block: shaky and unrated topics first, then
+     anything not seen for a while, nudged by how heavily the exam leans on it. */
+  function topicScore(topic, now) {
+    var p = topicProgress(topic.id);
+    var base = [2.2, 3, 1.6, 0.5][p.conf] || 2.2;
+    var days = p.last ? daysBetween(new Date(p.last), now) : 30;
+    var recency = 0.4 + Math.min(21, days) / 21;
+    var weight = 0.7 + 0.3 * (topic.weight || 1);
+    return base * recency * weight;
+  }
+  function pickTopic(sub, used, now) {
+    var list = topicsFor(sub);
+    if (!list.length) return null;
+    var best = null, bestScore = -1;
+    list.forEach(function (t) {
+      var sc = topicScore(t, now);
+      if (used[t.id]) sc *= 0.15;                   // already planned this week
+      if (used['strand:' + t.strandId]) sc *= 0.75; // spread the week across strands
+      if (sc > bestScore) { bestScore = sc; best = t; }
+    });
+    return best;
+  }
+
+  /* <select> contents for a subject's topics, grouped by strand. */
+  function topicOptions(subjectId, selected) {
+    var html = '<option value="">Not a syllabus topic</option>';
+    var sub = subject(subjectId);
+    if (!sub) return html;
+    var groups = {}, order = [];
+    topicsFor(sub).forEach(function (t) {
+      if (!groups[t.strand]) { groups[t.strand] = []; order.push(t.strand); }
+      groups[t.strand].push(t);
+    });
+    order.forEach(function (g) {
+      html += '<optgroup label="' + esc(g) + '">' + groups[g].map(function (t) {
+        var ch = chapterFor(t);
+        return '<option value="' + esc(t.id) + '"' + (t.id === selected ? ' selected' : '') + '>' +
+          esc(t.title) + (ch ? ' (' + (/^\d/.test(ch) ? 'ch. ' : '') + esc(ch) + ')' : '') + '</option>';
+      }).join('') + '</optgroup>';
+    });
+    return html;
+  }
+
+  function topicRow(t, off, own) {
+    var p = topicProgress(t.id);
+    var ch = chapterFor(t);
+    var last = p.last ? 'studied ' + fmtDue(p.last).toLowerCase() : 'not studied yet';
+    return '<div class="topic-row">' +
+      '<button class="rag c' + p.conf + '" data-action="cycle-conf" data-id="' + esc(t.id) + '" aria-label="' + RAG_LABEL[p.conf] + '" title="' + RAG_LABEL[p.conf] + '"></button>' +
+      '<div class="body"><div class="t">' + esc(t.title) + '</div>' +
+      '<div class="meta">' + (t.detail ? esc(t.detail) + ' · ' : '') + last + (t.weight >= 3 ? ' · heavily examined' : '') + '</div></div>' +
+      '<label class="ch"><input data-chapter="' + esc(t.id) + '" value="' + esc(ch) + '" placeholder="ch." aria-label="Chapter in your book"' + (off ? ' disabled' : '') + '></label>' +
+      (own ? '<button class="icon-btn" data-action="del-topic" data-id="' + esc(t.id) + '" aria-label="Remove">&times;</button>' : '') +
+      '</div>';
+  }
+
+  function renderSyllabus() {
+    if (!ui.sylSubject || !subject(ui.sylSubject)) ui.sylSubject = state.subjects.length ? state.subjects[0].id : null;
+
+    $('#sylSubjects').innerHTML = state.subjects.map(function (sub) {
+      var list = topicsFor(sub);
+      var solid = list.filter(function (t) { return topicProgress(t.id).conf === 3; }).length;
+      return '<button class="chip-btn' + (sub.id === ui.sylSubject ? ' active' : '') + '" data-action="syl-subject" data-id="' + sub.id + '">' +
+        esc(sub.name) + '<span class="n">' + (list.length ? solid + '/' + list.length + ' solid' : 'no topics yet') + '</span></button>';
+    }).join('');
+
+    var sub = subject(ui.sylSubject);
+    if (!sub) {
+      $('#sylBody').innerHTML = '<div class="card"><div class="empty">Add your subjects in Setup first.</div></div>';
+      return;
+    }
+    var cat = catalogueFor(sub.name);
+    var list = topicsFor(sub);
+    var conf = [0, 0, 0, 0];
+    list.forEach(function (t) { conf[topicProgress(t.id).conf]++; });
+    var b = state.books[sub.id] || { book: '', custom: '', ch: {} };
+    var mine = state.customTopics[sub.id] || [];
+    var skip = state.skipStrands[sub.id] || {};
+
+    var html = '<div class="card">' +
+      '<div class="card-head"><h2>' + esc(sub.name) + '</h2><span class="side">' + (sub.level === 'H' ? 'Higher' : 'Ordinary') + ' Level</span></div>' +
+      (list.length
+        ? '<div class="track"><i style="width:' + Math.round(conf[3] / list.length * 100) + '%"></i></div>' +
+          '<div class="rag-legend">' +
+            '<span><i style="background:var(--accent)"></i>' + conf[3] + ' solid</span>' +
+            '<span><i style="background:var(--gold)"></i>' + conf[2] + ' getting there</span>' +
+            '<span><i style="background:var(--danger)"></i>' + conf[1] + ' shaky</span>' +
+            '<span><i style="border:2px solid var(--border-strong);width:8px;height:8px"></i>' + conf[0] + ' not rated</span></div>'
+        : '') +
+      '<label class="field" style="margin-top:14px"><span>Your textbook</span><select id="sylBook">' +
+        '<option value="">No book set</option>' +
+        (cat ? cat.books.map(function (bk) {
+          return '<option value="' + esc(bk.id) + '"' + (b.book === bk.id ? ' selected' : '') + '>' +
+            esc(bk.title) + (bk.publisher ? ' — ' + esc(bk.publisher) : '') + '</option>';
+        }).join('') : '') +
+        '<option value="custom"' + (b.book === 'custom' ? ' selected' : '') + '>Another book…</option>' +
+      '</select></label>' +
+      (b.book === 'custom'
+        ? '<label class="field"><span>Book title</span><input id="sylBookCustom" value="' + esc(b.custom || '') + '" placeholder="Whatever is on the cover"></label>'
+        : '') +
+      '<p class="hint" style="margin-top:10px">Tap the circle to rate a topic; type the chapter number from your own book and the planner will name it in each block.' +
+        (cat && cat.note ? ' ' + esc(cat.note) : '') + '</p>' +
+      '</div>';
+
+    if (cat) {
+      cat.strands.forEach(function (st) {
+        var off = !!skip[st.id];
+        var rows = st.topics.filter(function (t) { return !(t.hl && sub.level !== 'H'); })
+          .map(function (t) { return topicRow(catTopic(sub, st, t), off, false); });
+        mine.filter(function (t) { return t.strand === st.id; })
+          .forEach(function (t) { rows.push(topicRow(ownTopic(sub, t), off, true)); });
+        html += '<section class="group' + (off ? ' strand-off' : '') + '">' +
+          '<div class="strand-head"><span class="d">' + esc(st.title) + '</span>' +
+          (st.paper ? '<span class="side">' + esc(st.paper) + '</span>' : '') +
+          '<label><input type="checkbox" data-action="toggle-strand" data-strand="' + esc(st.id) + '"' + (off ? '' : ' checked') + '> on my course</label></div>' +
+          '<div class="card flush">' + rows.join('') + '</div></section>';
+      });
+    }
+
+    var loose = mine.filter(function (t) { return !t.strand || !cat; });
+    html += '<section class="group"><div class="strand-head"><span class="d">My own topics</span>' +
+      '<button class="link" data-action="add-topic">+ Add topic</button></div>' +
+      (loose.length
+        ? '<div class="card flush">' + loose.map(function (t) { return topicRow(ownTopic(sub, t), false, true); }).join('') + '</div>'
+        : '<div class="day-free">' + (cat
+            ? 'Your set texts, poets, case studies — anything your class covers that is not listed above.'
+            : 'There is no built-in syllabus for ' + esc(sub.name) + ' yet. Add the topics your class covers and the planner will use them.') + '</div>') +
+      '</section>';
+
+    if (cat && cat.source) {
+      html += '<p class="hint" style="margin-top:14px">' + esc(cat.source) + '. Headings follow the specification; switch off anything your teacher is leaving out.</p>';
+    }
+    $('#sylBody').innerHTML = html;
+  }
+
+  function topicModal() {
+    var sub = subject(ui.sylSubject);
+    if (!sub) return;
+    var cat = catalogueFor(sub.name);
+    openModal('Add a topic to ' + sub.name,
+      '<label class="field"><span>Topic</span><input id="tpTitle" placeholder="e.g. King Lear, Sylvia Plath, the 1913 Lockout"></label>' +
+      '<label class="field"><span>Where it belongs</span><select id="tpStrand"><option value="">My own topics</option>' +
+        (cat ? cat.strands.map(function (st) { return '<option value="' + esc(st.id) + '">' + esc(st.title) + '</option>'; }).join('') : '') +
+      '</select></label>' +
+      '<label class="field"><span>How heavily is it examined?</span><select id="tpWeight">' +
+        '<option value="1">Lightly</option><option value="2" selected>Normally</option><option value="3">Heavily</option></select></label>',
+      '<button class="btn ghost" data-action="close-modal">Cancel</button>' +
+      '<button class="btn primary" data-action="save-topic">Add</button>'
+    );
+  }
+
+  /* Today: the topics rated shaky, worst first. */
+  function renderWeakSpots() {
+    var card = $('#cardWeakSpots');
+    if (!card) return;
+    var now = new Date();
+    var weak = allTopics().filter(function (t) { return topicProgress(t.id).conf === 1; })
+      .sort(function (a, b) { return topicScore(b, now) - topicScore(a, now); }).slice(0, 5);
+    if (!weak.length) { card.hidden = true; return; }
+    card.hidden = false;
+    $('#weakSpots').innerHTML = weak.map(function (t) {
+      var ch = chapterFor(t);
+      return '<div class="item"><div class="body" style="cursor:default"><span class="t">' + esc(t.title) + '</span>' +
+        '<span class="meta"><span class="pill"><i class="dot" style="background:' + subjectColor(t.subjectId) + '"></i>' + esc(subjectName(t.subjectId)) + '</span>' +
+        (ch ? '<span class="pill">' + esc((bookShort(t.subjectId) ? bookShort(t.subjectId) + ' ' : '') + (/^\d/.test(ch) ? 'ch. ' : '') + ch) + '</span>' : '') +
+        '</span></div>' +
+        '<button class="btn small subtle" data-action="study-topic" data-id="' + esc(t.id) + '">Study</button></div>';
+    }).join('');
+  }
+
   /* ---------------- Homework ---------------- */
 
   function renderHomework() {
@@ -684,8 +963,11 @@
     });
     $('#planTimetable').hidden = ui.planTab !== 'timetable';
     $('#planStudy').hidden = ui.planTab !== 'study';
-    $('#hdrTitle').textContent = ui.planTab === 'timetable' ? 'Timetable' : 'Study plan';
+    $('#planSyllabus').hidden = ui.planTab !== 'syllabus';
+    $('#hdrTitle').textContent = ui.planTab === 'timetable' ? 'Timetable'
+      : (ui.planTab === 'syllabus' ? 'Syllabus' : 'Study plan');
     renderTimetable();
+    if (ui.planTab === 'syllabus') renderSyllabus();
 
     var total = state.plan.reduce(function (a, b) { return a + b.mins; }, 0);
     $('#planTotal').textContent = total ? dur(total) + ' a week' : '';
@@ -723,6 +1005,7 @@
     });
 
     var plan = [];
+    var used = {};                                   // topics and strands already placed this week
     WEEK_ORDER.forEach(function (day) {
       var perDay = day === 0 || day === 6 ? Math.round(goal * 1.25) : goal;   // weekends take a bit more
       var slots = Math.max(0, Math.floor(perDay / BLOCK));
@@ -738,7 +1021,15 @@
         if (!pick) break;
         pick.count++;
         lastPick = pick.s.id;
-        plan.push({ id: uid(), day: day, start: hm(t), mins: BLOCK, subjectId: pick.s.id, topic: '' });
+        var block = { id: uid(), day: day, start: hm(t), mins: BLOCK, subjectId: pick.s.id, topic: '', topicId: null };
+        var tp = pickTopic(pick.s, used, now);
+        if (tp) {
+          used[tp.id] = true;
+          used['strand:' + tp.strandId] = true;
+          block.topicId = tp.id;
+          block.topic = topicRef(tp);
+        }
+        plan.push(block);
         t += BLOCK + GAP;
       }
     });
@@ -764,6 +1055,7 @@
     }
     var t = state.timer;
     if (t.kind !== 'stopwatch') t.kind = t.kind || 'pomodoro';
+    if (t.topicId === undefined) t.topicId = null;
     if (typeof t.swAccum !== 'number') t.swAccum = 0;
     if (typeof t.swStart !== 'number') t.swStart = 0;
     return t;
@@ -801,6 +1093,7 @@
       return '<option value="' + s.id + '"' + (s.id === t.subjectId ? ' selected' : '') + '>' + esc(s.name) + '</option>';
     }).join('') || '<option value="">Add a subject in Setup</option>';
     $('#timerTopic').value = t.topic || '';
+    $('#timerTopicPick').innerHTML = topicOptions(t.subjectId, t.topicId);
     $('#focusMins').value = state.profile.focusMins;
     $('#breakMins').value = state.profile.breakMins;
     $$('#timerModeSeg button').forEach(function (b) {
@@ -910,7 +1203,7 @@
     t.swAccum = 0;
     stopTicker();
     if (mins >= 1) {
-      logSession(t.subjectId, t.topic, mins);
+      logSession(t.subjectId, t.topic, mins, t.topicId);
       toast(dur(mins) + ' logged to ' + subjectName(t.subjectId));
     } else {
       save(true);
@@ -923,11 +1216,13 @@
     var t = timerState();
     var total = state.profile.focusMins * 60;
     var elapsed = Math.round((total - timerRemaining()) / 60);
-    if (elapsed >= 1) logSession(t.subjectId, t.topic, elapsed);
+    if (elapsed >= 1) logSession(t.subjectId, t.topic, elapsed, t.topicId);
   }
 
-  function logSession(subjectId, topic, mins) {
-    state.sessions.push({ id: uid(), subjectId: subjectId, topic: topic || '', mins: mins, at: new Date().toISOString() });
+  function logSession(subjectId, topic, mins, topicId) {
+    var at = new Date().toISOString();
+    state.sessions.push({ id: uid(), subjectId: subjectId, topic: topic || '', mins: mins, at: at, topicId: topicId || null });
+    markStudied(topicId, at);
     save();
   }
 
@@ -955,7 +1250,7 @@
     t.running = false;
     stopTicker();
     if (t.mode === 'focus') {
-      logSession(t.subjectId, t.topic, state.profile.focusMins);
+      logSession(t.subjectId, t.topic, state.profile.focusMins, t.topicId);
       t.mode = 'break';
       t.remaining = state.profile.breakMins * 60;
       if (state.notify.timer) notifyNow('Focus block done', dur(state.profile.focusMins) + ' of ' + subjectName(t.subjectId) + ' logged. Take a ' + state.profile.breakMins + ' minute break.', 'study');
@@ -1355,7 +1650,9 @@
         '<label class="field"><span>Start</span><input type="time" id="bStart" value="' + esc(state.profile.studyStart) + '"></label>' +
         '<label class="field"><span>Minutes</span><input type="number" id="bMins" min="15" step="15" inputmode="numeric" value="45"></label>' +
       '</div>' +
-      '<label class="field"><span>Topic (optional)</span><input id="bTopic" placeholder="e.g. Past paper 2019 Q3"></label>',
+      '<label class="field"><span>Syllabus topic</span><select id="bTopicPick">' +
+        topicOptions(state.subjects.length ? state.subjects[0].id : null, null) + '</select></label>' +
+      '<label class="field"><span>Or describe it</span><input id="bTopic" placeholder="e.g. Past paper 2019 Q3"></label>',
       '<button class="btn ghost" data-action="close-modal">Cancel</button>' +
       '<button class="btn primary" data-action="save-block">Add block</button>'
     );
@@ -1461,7 +1758,8 @@
         '<label class="field"><span>Minutes</span><input type="number" id="sesMins" min="1" step="5" inputmode="numeric" value="' + ses.mins + '"></label>' +
         '<label class="field"><span>When</span><input type="datetime-local" id="sesWhen" value="' + localDatetimeValue(new Date(ses.at)) + '"></label>' +
       '</div>' +
-      '<label class="field"><span>Topic</span><input id="sesTopic" value="' + esc(ses.topic || '') + '" placeholder="e.g. Trigonometry"></label>' +
+      '<label class="field"><span>Syllabus topic</span><select id="sesTopicPick">' + topicOptions(ses.subjectId, ses.topicId || null) + '</select></label>' +
+      '<label class="field"><span>Or describe it</span><input id="sesTopic" value="' + esc(ses.topic || '') + '" placeholder="e.g. Trigonometry"></label>' +
       '<label class="field"><span>Notes</span><textarea id="sesNote" placeholder="What you covered, what tripped you up, what to redo">' + esc(ses.note || '') + '</textarea></label>',
       '<button class="btn danger" data-action="del-session" data-id="' + ses.id + '">Delete</button>' +
       '<button class="btn ghost" data-action="close-modal">Cancel</button>' +
@@ -1514,7 +1812,8 @@
         '<label class="field"><span>Minutes</span><input type="number" id="lMins" min="5" step="5" inputmode="numeric" value="45"></label>' +
         '<label class="field"><span>When</span><input type="datetime-local" id="lWhen" value="' + localDatetimeValue(new Date()) + '"></label>' +
       '</div>' +
-      '<label class="field"><span>Topic (optional)</span><input id="lTopic"></label>' +
+      '<label class="field"><span>Syllabus topic</span><select id="lTopicPick">' + topicOptions(timerState().subjectId, timerState().topicId) + '</select></label>' +
+      '<label class="field"><span>Or describe it</span><input id="lTopic"></label>' +
       '<label class="field"><span>Notes (optional)</span><textarea id="lNote" placeholder="What you covered"></textarea></label>',
       '<button class="btn ghost" data-action="close-modal">Cancel</button>' +
       '<button class="btn primary" data-action="save-log">Log it</button>'
@@ -1741,6 +2040,9 @@
         if (!state.timetable.classes) state.timetable.classes = {};
         if (!Array.isArray(state.results)) state.results = [];
         if (!Array.isArray(state.courses)) state.courses = [];
+        ['topics', 'books', 'customTopics', 'skipStrands'].forEach(function (k) {
+          if (!state[k] || typeof state[k] !== 'object') state[k] = {};
+        });
         save();
         render();
         toast('Backup restored');
@@ -1868,10 +2170,13 @@
         save(); render();
         break;
       case 'save-block': {
+        var bTopicId = $('#bTopicPick').value || null;
+        var bTopic = topicById(bTopicId);
         state.plan.push({
           id: uid(), day: +$('#bDay').value, start: $('#bStart').value || '17:00',
           mins: +$('#bMins').value || 45, subjectId: $('#bSubject').value || null,
-          topic: $('#bTopic').value.trim()
+          topic: $('#bTopic').value.trim() || (bTopic ? topicRef(bTopic) : ''),
+          topicId: bTopic ? bTopic.id : null
         });
         save(); closeModal(); render();
         break;
@@ -1889,8 +2194,57 @@
         save(); closeModal(); render();
         break;
       }
+      case 'syl-subject': ui.sylSubject = id; renderSyllabus(); break;
+      case 'open-syllabus':
+        ui.planTab = 'syllabus';
+        if (el.dataset.subject) ui.sylSubject = el.dataset.subject;
+        go('plan');
+        break;
+      case 'cycle-conf': {
+        var prog = state.topics[id] || { conf: 0, last: null };
+        prog.conf = (prog.conf + 1) % 4;
+        state.topics[id] = prog;
+        save(true);
+        renderSyllabus();
+        break;
+      }
+      case 'add-topic': topicModal(); break;
+      case 'save-topic': {
+        var tpTitle = $('#tpTitle').value.trim();
+        if (!tpTitle) { toast('Name the topic first'); break; }
+        var list = state.customTopics[ui.sylSubject] = state.customTopics[ui.sylSubject] || [];
+        list.push({ id: 'c_' + uid(), title: tpTitle, strand: $('#tpStrand').value || '', weight: +$('#tpWeight').value || 2 });
+        save(true); closeModal(); renderSyllabus();
+        break;
+      }
+      case 'del-topic': {
+        state.customTopics[ui.sylSubject] = (state.customTopics[ui.sylSubject] || []).filter(function (t) { return t.id !== id; });
+        delete state.topics[id];
+        if (state.books[ui.sylSubject] && state.books[ui.sylSubject].ch) delete state.books[ui.sylSubject].ch[id];
+        save(true); renderSyllabus();
+        break;
+      }
+      case 'study-topic': {
+        var target = topicById(id);
+        if (target) {
+          var tm = timerState();
+          if (tm.running) pauseTimer();
+          tm.subjectId = target.subjectId;
+          tm.topicId = target.id;
+          tm.topic = target.title;
+          save(true);
+        }
+        go('study');
+        break;
+      }
+
       case 'delete-subject': {
         var dropped = subject(id);
+        Object.keys(state.topics).forEach(function (k) { if (k.indexOf(id + ':') === 0) delete state.topics[k]; });
+        (state.customTopics[id] || []).forEach(function (t) { delete state.topics[t.id]; });
+        delete state.customTopics[id];
+        delete state.books[id];
+        delete state.skipStrands[id];
         Object.keys(state.timetable.classes).forEach(function (k) {
           var cl = state.timetable.classes[k];
           if (cl && cl.subjectId === id) { cl.subjectId = null; cl.name = dropped ? dropped.name : 'Class'; }
@@ -1928,8 +2282,11 @@
           ses.subjectId = $('#sesSubject').value || null;
           ses.mins = Math.max(1, +$('#sesMins').value || 1);
           ses.at = ($('#sesWhen').value ? new Date($('#sesWhen').value) : new Date(ses.at)).toISOString();
-          ses.topic = $('#sesTopic').value.trim();
+          var sesTopic = topicById($('#sesTopicPick').value || null);
+          ses.topicId = sesTopic ? sesTopic.id : null;
+          ses.topic = $('#sesTopic').value.trim() || (sesTopic ? sesTopic.title : '');
           ses.note = $('#sesNote').value.trim();
+          markStudied(ses.topicId, ses.at);
           save();
         }
         closeModal(); render(); toast('Saved');
@@ -1994,11 +2351,15 @@
         break;
       case 'save-log': {
         var when = $('#lWhen').value ? new Date($('#lWhen').value) : new Date();
+        var lTopicId = $('#lTopicPick').value || null;
+        var lTopic = topicById(lTopicId);
         state.sessions.push({
-          id: uid(), subjectId: $('#lSubject').value || null, topic: $('#lTopic').value.trim(),
+          id: uid(), subjectId: $('#lSubject').value || null,
+          topic: $('#lTopic').value.trim() || (lTopic ? lTopic.title : ''),
           mins: +$('#lMins').value || 0, at: when.toISOString(),
-          note: $('#lNote').value.trim()
+          note: $('#lNote').value.trim(), topicId: lTopic ? lTopic.id : null
         });
+        markStudied(lTopic ? lTopic.id : null, when.toISOString());
         save(); closeModal(); render(); toast('Logged');
         break;
       }
@@ -2018,6 +2379,44 @@
       save(true);
       renderPoints();
     }
+
+    /* Syllabus screen */
+    var chap = e.target.closest('[data-chapter]');
+    if (chap) {
+      var bk = bookFor(ui.sylSubject);
+      var v = chap.value.trim();
+      if (v) bk.ch[chap.dataset.chapter] = v; else delete bk.ch[chap.dataset.chapter];
+      save(true);
+    }
+    if (e.target.id === 'sylBook') {
+      bookFor(ui.sylSubject).book = e.target.value;
+      save(true);
+      renderSyllabus();
+    }
+    if (e.target.id === 'sylBookCustom') {
+      bookFor(ui.sylSubject).custom = e.target.value.trim();
+      save(true);
+    }
+    var strandToggle = e.target.closest('[data-action="toggle-strand"]');
+    if (strandToggle) {
+      var sk = state.skipStrands[ui.sylSubject] = state.skipStrands[ui.sylSubject] || {};
+      if (strandToggle.checked) delete sk[strandToggle.dataset.strand];
+      else sk[strandToggle.dataset.strand] = true;
+      save();
+      renderSyllabus();
+    }
+
+    /* Topic pickers follow their subject picker */
+    if (e.target.id === 'timerTopicPick') {
+      var tmr = timerState();
+      tmr.topicId = e.target.value || null;
+      var chosen = tmr.topicId ? topicById(tmr.topicId) : null;
+      if (chosen) { tmr.topic = chosen.title; $('#timerTopic').value = chosen.title; }
+      save(true);
+    }
+    if (e.target.id === 'lSubject' && $('#lTopicPick')) $('#lTopicPick').innerHTML = topicOptions(e.target.value, null);
+    if (e.target.id === 'sesSubject' && $('#sesTopicPick')) $('#sesTopicPick').innerHTML = topicOptions(e.target.value, null);
+    if (e.target.id === 'bSubject' && $('#bTopicPick')) $('#bTopicPick').innerHTML = topicOptions(e.target.value, null);
   });
 
   function wire() {
@@ -2060,7 +2459,13 @@
       var b = e.target.closest('button[data-tmode]');
       if (b) setTimerKind(b.dataset.tmode);
     });
-    $('#timerSubject').addEventListener('change', function () { timerState().subjectId = this.value; save(true); });
+    $('#timerSubject').addEventListener('change', function () {
+      var tm = timerState();
+      tm.subjectId = this.value;
+      tm.topicId = null;
+      $('#timerTopicPick').innerHTML = topicOptions(tm.subjectId, null);
+      save(true);
+    });
     $('#timerTopic').addEventListener('input', function () { timerState().topic = this.value; save(true); });
     $('#focusMins').addEventListener('change', function () {
       state.profile.focusMins = Math.max(5, Math.min(120, +this.value || 25));
