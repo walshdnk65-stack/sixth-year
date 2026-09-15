@@ -1,9 +1,9 @@
 /* Service worker: offline shell + reminders that fire when the app is closed. */
-importScripts('./store.js?v=10');
+importScripts('./store.js?v=11');
 
-var CACHE = 'sixth-year-v10';
+var CACHE = 'sixth-year-v11';
 var SHELL = [
-  './', './index.html', './app.css?v=10', './app.js?v=10', './store.js?v=10', './syllabus.js?v=10',
+  './', './index.html', './app.css?v=11', './app.js?v=11', './store.js?v=11', './syllabus.js?v=11',
   './manifest.webmanifest', './icon.svg', './icon-maskable.svg', './badge.svg'
 ];
 

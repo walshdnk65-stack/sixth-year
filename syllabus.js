@@ -6,10 +6,11 @@
  * is Higher Level only.
  *
  * Headings follow the NCCA/SEC specifications. Textbooks listed are the ones in
- * common use; chapter numbers are deliberately NOT included here — they differ by
- * edition and by school, so students map their own book's chapters to topics
- * inside the app. Subjects without an entry get a blank syllabus the student can
- * fill in themselves. */
+ * common use. Where a book's chapter list has been verified against the edition
+ * (see Text & Tests 4 and 5 under Mathematics) its chapters are included and map
+ * onto topics; otherwise chapter numbers are left for the student to type in from
+ * their own copy, since editions differ. Subjects without an entry get a blank
+ * syllabus the student can fill in themselves. */
 window.SYLLABUS = {
   aliases: {
     'Maths': 'Mathematics', 'Gaeilge': 'Irish', 'Ag Science': 'Agricultural Science',
@@ -23,7 +24,83 @@ window.SYLLABUS = {
       note: 'Paper 1 covers Number, Algebra and Functions; Paper 2 covers Statistics, Probability, Geometry and Trigonometry.',
       books: [
         { id: 'active-maths-4', title: 'Active Maths 4 (Books 1 & 2)', publisher: 'Folens' },
-        { id: 'text-tests-6-7', title: 'Text & Tests 6 and 7', publisher: 'Celtic Press' },
+        /* Chapter numbers and titles are from the 2018 editions (Morris, Cooke & O'Regan;
+           Celtic Press, now CJ Fallon). The two volumes replaced the old Text & Tests
+           4/5/6/7. "covers" describes what each chapter maps to in the syllabus above;
+           the book's own numbered section headings are not reproduced here. */
+        { id: 'text-tests-4-5', title: 'Text & Tests 4 and 5 (Higher Level)', short: 'Text & Tests',
+          publisher: 'Celtic Press / CJ Fallon',
+          volumes: ['Text & Tests 4 — Fifth Year', 'Text & Tests 5 — Sixth Year'],
+          chapters: [
+            { vol: 0, n: 1,  ref: 'Bk 4 ch. 1',  title: 'Algebra 1',
+              covers: 'Polynomial expressions and factorising; algebraic fractions; linear, quadratic and cubic equations; simultaneous equations; the factor theorem and identities',
+              topics: ['algebra.expressions', 'algebra.equations', 'algebra.cubics'] },
+            { vol: 0, n: 2,  ref: 'Bk 4 ch. 2',  title: 'Algebra 2',
+              covers: 'Indices, surds and logarithms; linear, quadratic, rational and modulus inequalities; exponential and log equations',
+              topics: ['number.numsys', 'algebra.inequalities', 'algebra.expolog'] },
+            { vol: 0, n: 3,  ref: 'Bk 4 ch. 3',  title: 'Trigonometry 1',
+              covers: 'Trig ratios; the sine and cosine rules; area of a triangle; bearings and problems in three dimensions',
+              topics: ['geom.trigbasic', 'geom.trig3d'] },
+            { vol: 0, n: 4,  ref: 'Bk 4 ch. 4',  title: 'Co-ordinate Geometry (The Line)',
+              covers: 'Slope and equation of a line; intersection; perpendicular distance; area of a triangle; dividing a segment in a ratio',
+              topics: ['geom.coordline'] },
+            { vol: 0, n: 5,  ref: 'Bk 4 ch. 5',  title: 'Probability 1',
+              covers: 'Counting and arrangements; the rules of probability; conditional probability and independence; tree diagrams',
+              topics: ['stats.counting', 'stats.prob'] },
+            { vol: 0, n: 6,  ref: 'Bk 4 ch. 6',  title: 'Geometry 1',
+              covers: 'Theorems and corollaries; the proofs of theorems 11, 12 and 13; geometric reasoning',
+              topics: ['geom.synthetic', 'geom.proofs'] },
+            { vol: 0, n: 7,  ref: 'Bk 4 ch. 7',  title: 'Differential Calculus',
+              covers: 'Differentiation from first principles; power, chain, product and quotient rules; trig, exponential and log functions; second derivatives',
+              topics: ['functions.diff'] },
+            { vol: 0, n: 8,  ref: 'Bk 4 ch. 8',  title: 'Trigonometry 2',
+              covers: 'The unit circle and radians; trig functions and their graphs; identities; solving trig equations',
+              topics: ['geom.trigfunc'] },
+            { vol: 0, n: 9,  ref: 'Bk 4 ch. 9',  title: 'Sequence, Series and Patterns',
+              covers: 'Arithmetic and geometric sequences and series; sum to infinity; patterns; proof by induction',
+              topics: ['number.sequences', 'number.induction'] },
+            { vol: 0, n: 10, ref: 'Bk 4 ch. 10', title: 'Statistics 1',
+              covers: 'Types of data and sampling; representing data; mean, median, mode and standard deviation; scatter graphs',
+              topics: ['stats.data', 'stats.summary'] },
+            { vol: 0, n: 11, ref: 'Bk 4 ch. 11', title: 'Co-ordinate Geometry (The Circle)',
+              covers: 'Equation of a circle; tangents; intersection of a line and a circle',
+              topics: ['geom.coordcircle'] },
+            { vol: 0, n: 12, ref: 'Bk 4 ch. 12', title: 'Algebra 3',
+              covers: 'The binomial theorem; further equations, identities and proof',
+              topics: ['algebra.binomial'] },
+
+            { vol: 1, n: 1,  ref: 'Bk 5 ch. 1',  title: 'Complex Numbers',
+              covers: 'The Argand diagram, modulus and conjugate; quadratic roots; polar form; De Moivre’s theorem and roots of complex numbers',
+              topics: ['number.complex', 'number.demoivre'] },
+            { vol: 1, n: 2,  ref: 'Bk 5 ch. 2',  title: 'Enlargements and Constructions',
+              covers: 'Enlargements and scale factors; transformations; the constructions',
+              topics: ['geom.transform', 'geom.synthetic'] },
+            { vol: 1, n: 3,  ref: 'Bk 5 ch. 3',  title: 'Integration',
+              covers: 'Indefinite and definite integrals of polynomials, exponentials and trig functions; area under a curve; average value',
+              topics: ['functions.integ'] },
+            { vol: 1, n: 4,  ref: 'Bk 5 ch. 4',  title: 'Applications of Differential Calculus',
+              covers: 'Tangents and normals; maxima and minima; rates of change; curve sketching',
+              topics: ['functions.diffapps'] },
+            { vol: 1, n: 5,  ref: 'Bk 5 ch. 5',  title: 'Financial Maths',
+              covers: 'Compound interest and depreciation; present value; loans, annuities and amortisation; percentages and tax',
+              topics: ['number.financial', 'number.arith'] },
+            { vol: 1, n: 6,  ref: 'Bk 5 ch. 6',  title: 'Length, Area, Volume',
+              covers: 'Perimeter and area; the trapezoidal rule; nets; volumes of prisms, cylinders, cones and spheres',
+              topics: ['number.measure'] },
+            { vol: 1, n: 7,  ref: 'Bk 5 ch. 7',  title: 'Probability 2',
+              covers: 'Bernoulli trials and the binomial distribution; expected value; introducing the normal distribution',
+              topics: ['stats.dists'] },
+            { vol: 1, n: 8,  ref: 'Bk 5 ch. 8',  title: 'Functions and Graphs',
+              covers: 'Domain and range; inverse and composite functions; injective, surjective and bijective; graphing and transformations',
+              topics: ['functions.functions', 'functions.graphs'] },
+            { vol: 1, n: 9,  ref: 'Bk 5 ch. 9',  title: 'Statistics 2',
+              covers: 'The normal distribution and z-scores; sampling; correlation and the line of best fit',
+              topics: ['stats.dists', 'stats.inference'] },
+            { vol: 1, n: 10, ref: 'Bk 5 ch. 10', title: 'Inferential Statistics',
+              covers: 'Margin of error; confidence intervals; hypothesis testing and p-values',
+              topics: ['stats.inference'] }
+          ] },
+        { id: 'text-tests-3', title: 'Text & Tests 3 (Ordinary Level)', short: 'Text & Tests 3', publisher: 'Celtic Press / CJ Fallon' },
         { id: 'lsms-maths', title: 'Less Stress More Success — Maths', publisher: 'Gill' }
       ],
       strands: [

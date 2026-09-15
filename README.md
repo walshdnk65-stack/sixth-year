@@ -56,10 +56,14 @@ Business, Accounting, Applied Maths, Home Economics) and the modern languages sh
 anything else starts blank and you add the topics your class covers. For every topic you
 can:
 
-- **rate it** — tap the circle to cycle not rated → shaky → getting there → solid;
+- **rate it** — tap the circle to cycle not rated → shaky (red) → getting there (gold) → solid (green);
 - **map it to your book** — pick your textbook from the common ones (or type another) and
-  enter the chapter number from its contents page. Chapter numbers are never guessed for
-  you, because they differ by edition and by school;
+  enter the chapter number from its contents page. Where a book's chapter list has been
+  checked against the edition — currently **Text & Tests 4 and 5** for Higher Level Maths,
+  all 22 chapters across the two volumes — picking the book fills every chapter field for
+  you and shows a contents card with what each chapter covers. For every other book the
+  numbers come from your own copy, because editions differ and a wrong one is worse than
+  a blank;
 - **switch strands off** — options and electives your teacher is not doing come out of the
   planner with one tick;
 - **add your own** — set texts, poets, case studies, or an entire syllabus for a subject

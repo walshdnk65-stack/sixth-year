@@ -729,8 +729,45 @@
     return hit ? hit.title : '';
   }
   /* "Active Maths 4 (Books 1 & 2)" → "Active Maths 4"; "Less Stress More Success — Maths" → "Less Stress More Success" */
+  function bookEntry(subjectId) {
+    var b = state.books[subjectId];
+    if (!b || !b.book || b.book === 'custom') return null;
+    var cat = catalogueFor(subjectName(subjectId));
+    return cat ? cat.books.filter(function (x) { return x.id === b.book; })[0] || null : null;
+  }
   function bookShort(subjectId) {
+    var entry = bookEntry(subjectId);
+    if (entry && entry.short) return entry.short;
     return bookTitle(subjectId).replace(/\s*\(.*?\)/g, '').replace(/\s+—.*$/, '').trim();
+  }
+
+  /* Books whose chapter list is in the catalogue can fill the chapter fields
+     themselves. Only empty fields are touched unless `overwrite` is set, so a
+     student's own corrections survive re-picking the book. Returns how many. */
+  function applyBookChapters(subjectId, overwrite) {
+    var entry = bookEntry(subjectId);
+    if (!entry || !entry.chapters) return 0;
+    var b = bookFor(subjectId);
+    var refs = {};
+    entry.chapters.forEach(function (c) {
+      (c.topics || []).forEach(function (t) {
+        var id = subjectId + ':' + t.replace('.', ':');
+        (refs[id] = refs[id] || []).push(c.ref);
+      });
+    });
+    /* "Bk 5 ch. 7" + "Bk 5 ch. 9" → "Bk 5 ch. 7 & 9"; across volumes they stay separate. */
+    function joinRefs(list) {
+      var m = list.map(function (r) { return r.match(/^(.*ch\.\s*)(\d+)$/); });
+      if (m.every(function (x) { return x && x[1] === m[0][1]; })) {
+        return m[0][1] + m.map(function (x) { return x[2]; }).join(' & ');
+      }
+      return list.join('; ');
+    }
+    var n = 0;
+    Object.keys(refs).forEach(function (id) {
+      if (overwrite || !b.ch[id]) { b.ch[id] = joinRefs(refs[id]); n++; }
+    });
+    return n;
   }
   function chapterFor(topic) {
     var b = state.books[topic.subjectId];
@@ -826,9 +863,9 @@
     var html = '<div class="card">' +
       '<div class="card-head"><h2>' + esc(sub.name) + '</h2><span class="side">' + (sub.level === 'H' ? 'Higher' : 'Ordinary') + ' Level</span></div>' +
       (list.length
-        ? '<div class="track"><i style="width:' + Math.round(conf[3] / list.length * 100) + '%"></i></div>' +
+        ? '<div class="track good"><i style="width:' + Math.round(conf[3] / list.length * 100) + '%"></i></div>' +
           '<div class="rag-legend">' +
-            '<span><i style="background:var(--accent)"></i>' + conf[3] + ' solid</span>' +
+            '<span><i style="background:var(--good)"></i>' + conf[3] + ' solid</span>' +
             '<span><i style="background:var(--gold)"></i>' + conf[2] + ' getting there</span>' +
             '<span><i style="background:var(--danger)"></i>' + conf[1] + ' shaky</span>' +
             '<span><i style="border:2px solid var(--border-strong);width:8px;height:8px"></i>' + conf[0] + ' not rated</span></div>'
@@ -847,6 +884,29 @@
       '<p class="hint" style="margin-top:10px">Tap the circle to rate a topic; type the chapter number from your own book and the planner will name it in each block.' +
         (cat && cat.note ? ' ' + esc(cat.note) : '') + '</p>' +
       '</div>';
+
+    var entry = bookEntry(sub.id);
+    if (entry && entry.chapters) {
+      var byTopic = {};
+      list.forEach(function (t) { byTopic[t.id] = t.title; });
+      html += '<div class="card"><div class="card-head"><h2>' + esc(entry.short || entry.title) + ' — contents</h2>' +
+        '<button class="link" data-action="fill-chapters">Refill chapters</button></div>' +
+        '<p class="hint">Chapter numbers and titles from the current editions. “Covers” is what each chapter maps to in the syllabus above — not the book’s own section headings. Picking this book fills the chapter fields; Refill puts them back if you have changed any.</p>';
+      (entry.volumes || ['']).forEach(function (volName, vi) {
+        var chaps = entry.chapters.filter(function (c) { return (c.vol || 0) === vi; });
+        if (!chaps.length) return;
+        if (volName) html += '<div class="strand-head"><span class="d">' + esc(volName) + '</span></div>';
+        html += '<div class="chapters">' + chaps.map(function (c) {
+          var mapped = (c.topics || []).map(function (t) { return byTopic[sub.id + ':' + t.replace('.', ':')]; })
+            .filter(Boolean);
+          return '<div class="chap"><span class="n">' + c.n + '</span><div class="body"><div class="t">' + esc(c.title) + '</div>' +
+            (c.covers ? '<div class="meta">' + esc(c.covers) + '</div>' : '') +
+            (mapped.length ? '<div class="meta maps">→ ' + mapped.map(esc).join(' · ') + '</div>' : '') +
+            '</div></div>';
+        }).join('') + '</div>';
+      });
+      html += '</div>';
+    }
 
     if (cat) {
       cat.strands.forEach(function (st) {
@@ -2209,6 +2269,12 @@
         break;
       }
       case 'add-topic': topicModal(); break;
+      case 'fill-chapters': {
+        var refilled = applyBookChapters(ui.sylSubject, true);
+        save(true); renderSyllabus();
+        toast(refilled ? refilled + ' chapters set from the book' : 'This book has no chapter list');
+        break;
+      }
       case 'save-topic': {
         var tpTitle = $('#tpTitle').value.trim();
         if (!tpTitle) { toast('Name the topic first'); break; }
@@ -2390,8 +2456,10 @@
     }
     if (e.target.id === 'sylBook') {
       bookFor(ui.sylSubject).book = e.target.value;
+      var filled = applyBookChapters(ui.sylSubject, false);
       save(true);
       renderSyllabus();
+      if (filled) toast(filled + ' chapter' + (filled === 1 ? '' : 's') + ' filled in from the book');
     }
     if (e.target.id === 'sylBookCustom') {
       bookFor(ui.sylSubject).custom = e.target.value.trim();
