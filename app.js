@@ -755,13 +755,24 @@
         (refs[id] = refs[id] || []).push(c.ref);
       });
     });
-    /* "Bk 5 ch. 7" + "Bk 5 ch. 9" → "Bk 5 ch. 7 & 9"; across volumes they stay separate. */
+    /* "ch. 7" + "ch. 9" → "ch. 7 & 9"; a run becomes "Unité 1–9"; mixed
+       prefixes (two volumes, say) stay separate. */
     function joinRefs(list) {
-      var m = list.map(function (r) { return r.match(/^(.*ch\.\s*)(\d+)$/); });
-      if (m.every(function (x) { return x && x[1] === m[0][1]; })) {
-        return m[0][1] + m.map(function (x) { return x[2]; }).join(' & ');
-      }
-      return list.join('; ');
+      var groups = {}, order = [];
+      list.forEach(function (r) {
+        var m = r.match(/^(.*?)(\d+)$/);
+        var key = m ? m[1] : r;
+        if (!groups[key]) { groups[key] = []; order.push(key); }
+        if (m) groups[key].push(+m[2]);
+      });
+      return order.map(function (prefix) {
+        var nums = groups[prefix].sort(function (a, b) { return a - b; });
+        if (!nums.length) return prefix;
+        var consecutive = nums.every(function (n, i) { return i === 0 || n === nums[i - 1] + 1; });
+        if (consecutive && nums.length >= 3) return prefix + nums[0] + '–' + nums[nums.length - 1];
+        if (nums.length === 1) return prefix + nums[0];
+        return prefix + nums.slice(0, -1).join(', ') + ' & ' + nums[nums.length - 1];
+      }).join('; ');
     }
     var n = 0;
     Object.keys(refs).forEach(function (id) {
@@ -891,7 +902,10 @@
       list.forEach(function (t) { byTopic[t.id] = t.title; });
       html += '<div class="card"><div class="card-head"><h2>' + esc(entry.short || entry.title) + ' — contents</h2>' +
         '<button class="link" data-action="fill-chapters">Refill chapters</button></div>' +
-        '<p class="hint">Chapter numbers and titles from the current editions. “Covers” is what each chapter maps to in the syllabus above — not the book’s own section headings. Picking this book fills the chapter fields; Refill puts them back if you have changed any.</p>';
+        '<p class="hint">' + (entry.sectioned
+          ? 'Chapter titles and section headings are from the book’s own contents pages. '
+          : 'Chapter numbers and titles are from the current edition; the line under each is what it maps to in the syllabus above, not the book’s own section headings. ') +
+          'Picking this book fills the chapter fields; Refill puts them back if you have changed any.</p>';
       (entry.volumes || ['']).forEach(function (volName, vi) {
         var chaps = entry.chapters.filter(function (c) { return (c.vol || 0) === vi; });
         if (!chaps.length) return;
@@ -928,9 +942,9 @@
       '<button class="link" data-action="add-topic">+ Add topic</button></div>' +
       (loose.length
         ? '<div class="card flush">' + loose.map(function (t) { return topicRow(ownTopic(sub, t), false, true); }).join('') + '</div>'
-        : '<div class="day-free">' + (cat
+        : '<div class="day-free">' + (cat && cat.strands.length
             ? 'Your set texts, poets, case studies — anything your class covers that is not listed above.'
-            : 'There is no built-in syllabus for ' + esc(sub.name) + ' yet. Add the topics your class covers and the planner will use them.') + '</div>') +
+            : 'There is no built-in topic list for ' + esc(sub.name) + ' yet. Add the topics your class covers and the planner will use them.') + '</div>') +
       '</section>';
 
     if (cat && cat.source) {

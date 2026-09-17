@@ -23,7 +23,41 @@ window.SYLLABUS = {
       source: 'Leaving Certificate Mathematics syllabus — five strands (Project Maths)',
       note: 'Paper 1 covers Number, Algebra and Functions; Paper 2 covers Statistics, Probability, Geometry and Trigonometry.',
       books: [
-        { id: 'active-maths-4', title: 'Active Maths 4 (Books 1 & 2)', publisher: 'Folens' },
+        /* Chapter titles from the 2nd edition (2016); the book's section headings are not
+           reproduced, so chapters map straight onto syllabus topics. Book 1 is Paper 1
+           (strands 3–5), Book 2 is Paper 2 (strands 1–2). */
+        { id: 'active-maths-4', title: 'Active Maths 4, 2nd edition (Books 1 & 2, Higher Level)', short: 'Active Maths 4',
+          publisher: 'Folens',
+          volumes: ['Book 1 — Paper 1 (Strands 3–5)', 'Book 2 — Paper 2 (Strands 1–2)'],
+          chapters: [
+            { vol: 0, n: 1,  ref: 'Bk 1 ch. 1',  title: 'Algebra I', topics: ['algebra.expressions', 'algebra.equations'] },
+            { vol: 0, n: 2,  ref: 'Bk 1 ch. 2',  title: 'Algebra II', topics: ['algebra.cubics', 'algebra.inequalities'] },
+            { vol: 0, n: 3,  ref: 'Bk 1 ch. 3',  title: 'Algebra III', topics: ['algebra.binomial'] },
+            { vol: 0, n: 4,  ref: 'Bk 1 ch. 4',  title: 'Length, Area and Volume', topics: ['number.measure'] },
+            { vol: 0, n: 5,  ref: 'Bk 1 ch. 5',  title: 'Real Numbers', topics: ['number.numsys'] },
+            { vol: 0, n: 6,  ref: 'Bk 1 ch. 6',  title: 'Functions', topics: ['functions.functions', 'functions.graphs'] },
+            { vol: 0, n: 7,  ref: 'Bk 1 ch. 7',  title: 'Indices and Logarithms', topics: ['number.numsys', 'algebra.expolog'] },
+            { vol: 0, n: 8,  ref: 'Bk 1 ch. 8',  title: 'Number Patterns, Sequence and Series', topics: ['number.sequences'] },
+            { vol: 0, n: 9,  ref: 'Bk 1 ch. 9',  title: 'Arithmetic', topics: ['number.arith'] },
+            { vol: 0, n: 10, ref: 'Bk 1 ch. 10', title: 'Financial Mathematics', topics: ['number.financial'] },
+            { vol: 0, n: 11, ref: 'Bk 1 ch. 11', title: 'Proof By Induction', topics: ['number.induction'] },
+            { vol: 0, n: 12, ref: 'Bk 1 ch. 12', title: 'Complex Numbers', topics: ['number.complex', 'number.demoivre'] },
+            { vol: 0, n: 13, ref: 'Bk 1 ch. 13', title: 'Differential Calculus I', topics: ['functions.diff'] },
+            { vol: 0, n: 14, ref: 'Bk 1 ch. 14', title: 'Differential Calculus II', topics: ['functions.diffapps'] },
+            { vol: 0, n: 15, ref: 'Bk 1 ch. 15', title: 'Integral Calculus', topics: ['functions.integ'] },
+            { vol: 1, n: 1,  ref: 'Bk 2 ch. 1',  title: 'Statistics I', topics: ['stats.data'] },
+            { vol: 1, n: 2,  ref: 'Bk 2 ch. 2',  title: 'Probability I', topics: ['stats.counting', 'stats.prob'] },
+            { vol: 1, n: 3,  ref: 'Bk 2 ch. 3',  title: 'Probability II', topics: ['stats.dists'] },
+            { vol: 1, n: 4,  ref: 'Bk 2 ch. 4',  title: 'Statistics II', topics: ['stats.summary'] },
+            { vol: 1, n: 5,  ref: 'Bk 2 ch. 5',  title: 'Statistics III', topics: ['stats.inference'] },
+            { vol: 1, n: 6,  ref: 'Bk 2 ch. 6',  title: 'Geometry I', topics: ['geom.synthetic'] },
+            { vol: 1, n: 7,  ref: 'Bk 2 ch. 7',  title: 'Trigonometry', topics: ['geom.trigbasic', 'geom.trigfunc', 'geom.trig3d'] },
+            { vol: 1, n: 8,  ref: 'Bk 2 ch. 8',  title: 'Co-ordinate Geometry (The Line)', topics: ['geom.coordline'] },
+            { vol: 1, n: 9,  ref: 'Bk 2 ch. 9',  title: 'Co-ordinate Geometry (The Circle)', topics: ['geom.coordcircle'] },
+            { vol: 1, n: 10, ref: 'Bk 2 ch. 10', title: 'Geometry II', topics: ['geom.proofs'] },
+            { vol: 1, n: 11, ref: 'Bk 2 ch. 11', title: 'Constructions', topics: ['geom.synthetic'] },
+            { vol: 1, n: 12, ref: 'Bk 2 ch. 12', title: 'Enlargements', topics: ['geom.transform'] }
+          ] },
         /* Chapter numbers and titles are from the 2018 editions (Morris, Cooke & O'Regan;
            Celtic Press, now CJ Fallon). The two volumes replaced the old Text & Tests
            4/5/6/7. "covers" describes what each chapter maps to in the syllabus above;
@@ -151,160 +185,253 @@ window.SYLLABUS = {
     },
 
     /* ---------------------------------------------------------------- Biology */
+    /* ---------------------------------------------------------------- Biology */
     'Biology': {
-      source: 'Leaving Certificate Biology syllabus — three units plus mandatory experiments',
-      note: 'Section A short questions, Section B experiments, Section C long questions.',
+      source: 'Leaving Certificate Biology specification (2025) — first examined 2027. Unifying strand plus three contextual strands; section numbers are the specification’s own',
+      note: 'Written exam 60%, Biology in Practice Investigation 40% (common brief, externally assessed). Higher Level extras are marked HL.',
       books: [
-        { id: 'biology-plus', title: 'Biology Plus', publisher: 'Edco' },
-        { id: 'lc-biology-educate', title: 'Leaving Certificate Biology', publisher: 'Educate.ie' },
+        { id: 'biology-plus-2025', title: 'Biology Plus (2025 specification)', short: 'Biology Plus', publisher: 'Edco', sectioned: false,
+          chapters: [
+            { n: 1,  ref: 'ch. 1',  title: 'Scientific Knowledge', topics: ['u.nature'] },
+            { n: 2,  ref: 'ch. 2',  title: 'Investigating in Science', topics: ['u.investigating'] },
+            { n: 3,  ref: 'ch. 3',  title: 'Science in Society', topics: ['u.society'] },
+            { n: 4,  ref: 'ch. 4',  title: 'Biological Reasoning', topics: ['u.investigating'] },
+            { n: 5,  ref: 'ch. 5',  title: 'The Characteristics of Life', topics: ['s1.char'] },
+            { n: 6,  ref: 'ch. 6',  title: 'Viruses, Classification and the Domains of Life', topics: ['s1.classify'] },
+            { n: 7,  ref: 'ch. 7',  title: 'The Unit of Life: The Cell', topics: ['s1.cells'] },
+            { n: 8,  ref: 'ch. 8',  title: 'Biomolecules: The Chemicals of Life', topics: ['s1.biomol'] },
+            { n: 9,  ref: 'ch. 9',  title: 'Transfer Molecules', topics: ['s1.biomol'] },
+            { n: 10, ref: 'ch. 10', title: 'DNA, RNA and the Genetic Code', topics: ['s1.dna'] },
+            { n: 11, ref: 'ch. 11', title: 'Genetic Inheritance', topics: ['s1.inherit'] },
+            { n: 12, ref: 'ch. 12', title: 'Evolution: The Origins of Life', topics: ['s1.evolution'] },
+            { n: 13, ref: 'ch. 13', title: 'Enzymes', topics: ['s2.enzymes'] },
+            { n: 14, ref: 'ch. 14', title: 'Photosynthesis', topics: ['s2.photo'] },
+            { n: 15, ref: 'ch. 15', title: 'Respiration', topics: ['s2.resp'] },
+            { n: 16, ref: 'ch. 16', title: 'Cell Division and Cancer', topics: ['s2.celldiv'] },
+            { n: 17, ref: 'ch. 17', title: 'DNA Replication, Protein Synthesis and Mutations', topics: ['s2.protein'] },
+            { n: 18, ref: 'ch. 18', title: 'The Musculoskeletal System', topics: ['s2.musculo'] },
+            { n: 19, ref: 'ch. 19', title: 'The Nervous System', topics: ['s2.nervous'] },
+            { n: 20, ref: 'ch. 20', title: 'The Endocrine System', topics: ['s2.endocrine'] },
+            { n: 21, ref: 'ch. 21', title: 'Homeostasis', topics: ['s2.endocrine'] },
+            { n: 22, ref: 'ch. 22', title: 'Immunity', topics: ['s2.immune'] },
+            { n: 23, ref: 'ch. 23', title: 'Human Reproduction', topics: ['s2.humanrepro'] },
+            { n: 24, ref: 'ch. 24', title: 'Plant Reproduction', topics: ['s2.plantrepro'] },
+            { n: 25, ref: 'ch. 25', title: 'Transport Across Membranes', topics: ['s2.membranes'] },
+            { n: 26, ref: 'ch. 26', title: 'The Urinary System', topics: ['s2.urinary'] },
+            { n: 27, ref: 'ch. 27', title: 'The Digestive System', topics: ['s2.digestive'] },
+            { n: 28, ref: 'ch. 28', title: 'The Breathing System', topics: ['s2.breathing'] },
+            { n: 29, ref: 'ch. 29', title: 'The Circulatory System and Blood', topics: ['s2.circulation'] },
+            { n: 30, ref: 'ch. 30', title: 'Transport in Plants', topics: ['s2.planttransport'] },
+            { n: 31, ref: 'ch. 31', title: 'Ecology, Ecosystems and Biodiversity', topics: ['s3.ecology'] },
+            { n: 32, ref: 'ch. 32', title: 'Investigating an Ecosystem', topics: ['s3.fieldwork'] },
+            { n: 33, ref: 'ch. 33', title: 'Microorganisms', topics: ['s3.micro'] },
+            { n: 34, ref: 'ch. 34', title: 'Nutrient Cycling', topics: ['s3.cycling'] },
+            { n: 35, ref: 'ch. 35', title: 'Genetic Engineering', topics: ['s3.geneng'] }
+          ] },
+        { id: 'evolution-biology', title: 'Evolution: Leaving Certificate Biology (2025 specification)', short: 'Evolution' },
         { id: 'lsms-biology', title: 'Less Stress More Success — Biology', publisher: 'Gill' }
       ],
       strands: [
-        { id: 'u1', title: 'Unit 1 — Biology, the study of life', topics: [
-          { id: 'scimethod', title: 'The scientific method', detail: 'Hypothesis, experiment design, controls, limitations', weight: 1 },
-          { id: 'lifechar', title: 'Characteristics of life', detail: 'Metabolism, continuity of life, the five characteristics', weight: 1 },
-          { id: 'nutrition', title: 'Nutrition & biomolecules', detail: 'Carbohydrates, lipids, proteins, vitamins, minerals, water; food tests', weight: 2 },
-          { id: 'ecology', title: 'Ecology', detail: 'Ecosystems, energy flow, nutrient cycles, niche, factors, population dynamics, pollution and conservation', weight: 3 },
-          { id: 'habitat', title: 'Habitat study', detail: 'Mapping, collecting, identifying, quantitative surveys, abiotic measurement', weight: 2 }
+        { id: 'u', title: 'Unifying strand — Nature of Science', topics: [
+          { id: 'nature', title: 'The nature of scientific knowledge', detail: 'How scientific ideas are built, tested and revised; models and their limits', weight: 2 },
+          { id: 'investigating', title: 'Investigating in science', detail: 'Designing investigations, variables, primary and secondary data, analysis, error and reliability', weight: 3 },
+          { id: 'society', title: 'Science in society', detail: 'Evidence, ethics and communication; biology in health, sustainability and technology', weight: 2 },
+          { id: 'aac', title: 'Biology in Practice Investigation (40%)', detail: 'The externally assessed investigation from the common brief — planning, data, analysis and report', weight: 3 }
         ]},
-        { id: 'u2', title: 'Unit 2 — The cell', topics: [
-          { id: 'cellstruct', title: 'Cell structure', detail: 'Microscope, organelles, prokaryotic vs eukaryotic, plant vs animal cells', weight: 2 },
-          { id: 'membranes', title: 'Movement through membranes', detail: 'Diffusion, osmosis, turgor, active transport', weight: 2 },
-          { id: 'enzymes', title: 'Enzymes', detail: 'Active site, factors affecting activity, denaturation, immobilised enzymes', weight: 3 },
-          { id: 'photosynth', title: 'Photosynthesis', detail: 'Light and dark stages, factors, role of chlorophyll', weight: 3 },
-          { id: 'respiration', title: 'Respiration', detail: 'Aerobic and anaerobic, stages, fermentation', weight: 3 },
-          { id: 'celldiv', title: 'Cell division', detail: 'Cell cycle, mitosis, meiosis, cancer', weight: 2 },
-          { id: 'dna', title: 'DNA, RNA & protein synthesis', detail: 'Structure, replication, transcription, translation, DNA profiling', weight: 3 },
-          { id: 'genetics', title: 'Genetic inheritance', detail: 'Mendel’s laws, monohybrid and dihybrid crosses, sex linkage, non-nuclear inheritance', weight: 3 },
-          { id: 'geneng', title: 'Genetic engineering & evolution', detail: 'Techniques and applications, natural selection, evidence for evolution', weight: 2 }
+        { id: 's1', title: 'Strand 1 — Organisation of Life', topics: [
+          { id: 'char', title: '1.1 Characteristics of life & viruses', detail: 'Characteristics of living things; virus structure, the case for living or non-living, economic and medical importance', weight: 2 },
+          { id: 'classify', title: '1.1 Classification & the domains of life', detail: 'Archaea, bacteria, eukaryota; the kingdoms; prokaryotic vs eukaryotic; classification as an evolving system', weight: 2 },
+          { id: 'biomol', title: '1.2 Chemicals of life — biomolecules', detail: 'Carbohydrates, lipids, proteins, nucleic acids and their metabolic roles; nutritional sources; food tests', weight: 3 },
+          { id: 'cells', title: '1.3 Unit of life — cells', detail: 'Organisation from cell to organism; organelles and their functions; light and electron microscope images', weight: 3 },
+          { id: 'dna', title: '1.4 DNA, RNA & the genetic code', detail: 'Chromosome structure, coding and non-coding DNA, nuclear vs non-nuclear inheritance', weight: 3 },
+          { id: 'inherit', title: '1.4 Genetic inheritance', detail: 'Mendel’s laws, crosses, sex linkage, using models to predict inheritance', weight: 3 },
+          { id: 'evolution', title: '1.5 Origins of life — evolution', detail: 'Natural vs artificial selection, mutations, evidence for evolution, common ancestry', weight: 2 }
         ]},
-        { id: 'u3', title: 'Unit 3 — The organism', topics: [
-          { id: 'diversity', title: 'Diversity of organisms', detail: 'Monera, fungi, protista; Amoeba, Rhizopus, yeast, bacteria', weight: 2 },
-          { id: 'plantstruct', title: 'Plant structure & tissues', detail: 'Dermal, ground and vascular tissue; root, stem, leaf', weight: 2 },
-          { id: 'planttrans', title: 'Transport & nutrition in plants', detail: 'Water and mineral uptake, transpiration, cohesion-tension, food transport', weight: 2 },
-          { id: 'plantresp', title: 'Plant responses', detail: 'Growth regulators, tropisms, adaptations for protection', weight: 2 },
-          { id: 'plantrepro', title: 'Plant reproduction', detail: 'Flower structure, pollination, fertilisation, seed and fruit, dispersal, dormancy, germination', weight: 3 },
-          { id: 'humannut', title: 'Human nutrition', detail: 'Digestive system, enzymes, absorption, balanced diet', weight: 2 },
-          { id: 'breathing', title: 'The breathing system', detail: 'Structure, gas exchange, control of breathing, disorders', weight: 2 },
-          { id: 'circulation', title: 'Circulation & blood', detail: 'Heart, blood vessels, cardiac cycle, blood composition, lymph', weight: 3 },
-          { id: 'excretion', title: 'Excretion & osmoregulation', detail: 'Kidney and nephron, skin, homeostasis', weight: 2 },
-          { id: 'nervous', title: 'Nervous system & the senses', detail: 'Neuron, reflex arc, brain, eye, ear', weight: 3 },
-          { id: 'endocrine', title: 'Endocrine system', detail: 'Glands and hormones, feedback, diabetes', weight: 2 },
-          { id: 'skeleton', title: 'Musculoskeletal system', detail: 'Bone, joints, muscles, antagonistic pairs', weight: 1 },
-          { id: 'defence', title: 'Defence & the immune system', detail: 'Barriers, white cells, antibodies, immunity, viruses', weight: 2 },
-          { id: 'humanrepro', title: 'Human reproduction', detail: 'Systems, menstrual cycle, fertilisation, pregnancy, birth, infertility and contraception', weight: 3 }
+        { id: 's2', title: 'Strand 2 — Structures and Processes of Life', topics: [
+          { id: 'enzymes', title: '2.1 Enzymes', detail: 'Selective catalysts, 3D structure and specificity, factors affecting activity, immobilised enzymes', weight: 3 },
+          { id: 'photo', title: '2.2 Photosynthesis', detail: 'Anabolic process, light-dependent and light-independent stages, photosynthesis as a carbon sink', weight: 3 },
+          { id: 'resp', title: '2.2 Respiration', detail: 'Aerobic and anaerobic respiration, stages, carbon release, fermentation', weight: 3 },
+          { id: 'celldiv', title: '2.3 Cell division & cancer', detail: 'The cell cycle, mitosis, meiosis, haploid and diploid, cancer', weight: 2 },
+          { id: 'protein', title: '2.3 DNA replication, protein synthesis & mutations', detail: 'Replication, transcription, translation, mutations', weight: 3 },
+          { id: 'nervous', title: '2.4 Response — the nervous system', detail: 'Neurons, neurotransmitters, reflex arc, brain, sense organs', weight: 3 },
+          { id: 'endocrine', title: '2.4 Response — hormones & homeostasis', detail: 'Endocrine glands, hormone action, feedback, homeostasis', weight: 2 },
+          { id: 'musculo', title: '2.4 Response — the musculoskeletal system', detail: 'Bone, joints, muscle, movement', weight: 1 },
+          { id: 'immune', title: '2.4 Response — the immune system', detail: 'Defence, white cells, antibodies, immunity and vaccination', weight: 2 },
+          { id: 'plantresp', title: '2.4 Response in plants', detail: 'Anatomical and chemical adaptations, growth regulators', weight: 1 },
+          { id: 'humanrepro', title: '2.5 Human reproduction', detail: 'Male and female systems, gamete production, the menstrual cycle, fertilisation, pregnancy and birth', weight: 3 },
+          { id: 'plantrepro', title: '2.5 Plant reproduction', detail: 'Flower structure, pollination, fertilisation, seed, dispersal, germination', weight: 2 },
+          { id: 'membranes', title: '2.6 Transport across membranes', detail: 'Diffusion, osmosis and active transport; factors affecting osmosis', weight: 2 },
+          { id: 'urinary', title: '2.6 The urinary system', detail: 'Kidney, nephron, excretion and osmoregulation', weight: 2 },
+          { id: 'digestive', title: '2.6 The digestive system', detail: 'Digestion, absorption, the role of enzymes', weight: 2 },
+          { id: 'breathing', title: '2.6 The breathing system', detail: 'Gas exchange, control of breathing', weight: 2 },
+          { id: 'circulation', title: '2.6 Circulation & blood', detail: 'Heart, vessels, blood composition, blood groups and Rhesus factors', weight: 3 },
+          { id: 'planttransport', title: '2.6 Transport in plants', detail: 'Water and mineral uptake, transpiration, food transport', weight: 2 }
         ]},
-        { id: 'exps', title: 'Mandatory experiments', paper: 'Section B', topics: [
-          { id: 'foodtests', title: 'Food tests & enzymes', detail: 'Reducing sugar, starch, fat, protein; enzyme activity vs pH and temperature; denaturation; immobilised enzymes', weight: 3 },
-          { id: 'cellexps', title: 'Cell experiments', detail: 'Microscope prep of plant and animal cells, osmosis, mitosis slides', weight: 2 },
-          { id: 'photoexps', title: 'Photosynthesis & respiration', detail: 'Rate of photosynthesis vs light/CO₂, anaerobic respiration in yeast', weight: 3 },
-          { id: 'dnaexp', title: 'DNA extraction', detail: 'Isolating DNA from plant tissue', weight: 2 },
-          { id: 'ecoexps', title: 'Ecology fieldwork', detail: 'Habitat study, quantitative survey, abiotic factors', weight: 2 },
-          { id: 'physioexps', title: 'Physiology experiments', detail: 'Effect of exercise on breathing/pulse, dissection of the heart, transpiration, germination', weight: 2 }
+        { id: 's3', title: 'Strand 3 — Interactions of Life', topics: [
+          { id: 'ecology', title: '3.1 Ecology, ecosystems & biodiversity', detail: 'Ecosystems, energy flow, biodiversity loss and its impacts, species diversity index', weight: 3 },
+          { id: 'fieldwork', title: '3.1 Investigating an ecosystem', detail: 'Local ecosystem study — sampling, quantitative surveys, abiotic factors, reporting', weight: 2 },
+          { id: 'micro', title: '3.2 Microorganisms', detail: 'Bacteria and Rhizopus; autotrophic, heterotrophic, saprophytic and parasitic nutrition', weight: 2 },
+          { id: 'cycling', title: '3.2 Nutrient cycling', detail: 'Carbon and nitrogen cycles and the organisms that drive them', weight: 2 },
+          { id: 'geneng', title: '3.3 Genetic engineering', detail: 'Isolation, cutting, ligation, transformation and expression; applications and biotechnology', weight: 2 }
         ]}
       ]
     },
 
     /* -------------------------------------------------------------- Chemistry */
     'Chemistry': {
-      source: 'Leaving Certificate Chemistry syllabus, with the 28 mandatory experiments',
-      note: 'Questions on experiments carry heavy marks — know procedures, results and precautions, not just theory.',
+      source: 'Leaving Certificate Chemistry specification (2025) — first examined 2027. Unifying strand plus four contextual strands; section numbers are the specification’s own',
+      note: 'Written exam 60%, Chemistry in Practice Investigation 40% (common brief, externally assessed).',
       books: [
-        { id: 'chemistry-live', title: 'Chemistry Live!', publisher: 'Folens' },
-        { id: 'lc-chemistry-edco', title: 'Leaving Certificate Chemistry', publisher: 'Edco' },
+        { id: 'chemistry-live-3', title: 'Chemistry Live! 3rd edition (2025)', short: 'Chemistry Live!', publisher: 'Folens', sectioned: true,
+          volumes: ['Textbook', 'Assessment and Exam Guide'],
+          chapters: [
+            { vol: 0, n: 1,  ref: 'ch. 1',  title: 'The Nature of Science', covers: 'How scientists work; how scientific ideas are modified over time; science as a global enterprise; models in chemistry; chemistry in society', topics: ['u.nature', 'u.society'] },
+            { vol: 0, n: 2,  ref: 'ch. 2',  title: 'Atomic Structure: The Nuclear Model', covers: 'Development of the nuclear model; the plum pudding model (Thomson); the nuclear model (Rutherford); discovery of the proton and neutron; properties of the proton, neutron and electron', topics: ['s1.atomic'] },
+            { vol: 0, n: 3,  ref: 'ch. 3',  title: 'Atomic Structure: The Bohr and Orbital Models', covers: 'Bohr’s study of spectra; the Bohr model; energy sublevels; developments leading to changes in Bohr’s model; the orbital model', topics: ['s1.atomic'] },
+            { vol: 0, n: 4,  ref: 'ch. 4',  title: 'The Periodic Table: Arrangement of Electrons', covers: 'The elements; development of the modern periodic table; atomic and mass numbers; relative atomic mass and isotopes; electron configurations of atoms and ions; orbitals of equal energy', topics: ['s1.periodic', 's1.atomic'] },
+            { vol: 0, n: 5,  ref: 'ch. 5',  title: 'Chemical Bonding and Structure', covers: 'The octet rule; ionic bonding; formulas of ionic compounds; d-block and transition elements; covalent bonding; shapes of covalent molecules; tests for anions', topics: ['s2.bonding'] },
+            { vol: 0, n: 6,  ref: 'ch. 6',  title: 'Electronegativity and the Continuum of Chemical Bonding', covers: 'Electronegativity; the continuum of chemical bonding; intermolecular forces; physical properties of ionic and covalent compounds', topics: ['s2.bonding', 's2.imf'] },
+            { vol: 0, n: 7,  ref: 'ch. 7',  title: 'Families and Trends in the Periodic Table', covers: 'Trends in atomic radii, ionisation energy and electronegativity; Groups 1, 2, 17 and 18', topics: ['s1.periodic'] },
+            { vol: 0, n: 8,  ref: 'ch. 8',  title: 'The Mole: The Chemist’s Counting Unit', covers: 'Converting moles to grams and grams to moles; calculations with the Avogadro constant', topics: ['s1.mole'] },
+            { vol: 0, n: 9,  ref: 'ch. 9',  title: 'Kinetic Theory of Matter and Behaviour of Gases', covers: 'The kinetic theory of matter and evidence for it; volume, pressure and temperature of gases; kinetic theory applied to gases; the ideal gas equation', topics: ['s1.matter', 's2.gases'] },
+            { vol: 0, n: 10, ref: 'ch. 10', title: 'Law of Conservation of Mass: Introducing Stoichiometry', covers: 'Conservation of mass; physical and chemical changes; balancing equations; the mole in balanced equations; percentage composition; empirical formulas; masses and gas volumes from equations', topics: ['s1.mole'] },
+            { vol: 0, n: 11, ref: 'ch. 11', title: 'Acids and Bases', covers: 'Arrhenius and Brønsted–Lowry theories; conjugate acid–base pairs; neutralisation; reactions of acids with carbonates and metals', topics: ['s3.acids'] },
+            { vol: 0, n: 12, ref: 'ch. 12', title: 'Volumetric Analysis: Acid–Base', covers: 'Concentrations of solutions (percentage, ppm, molarity); converting units; dilution; standard solutions; apparatus and titration procedure; calculating unknown concentrations', topics: ['s4.volumetric'] },
+            { vol: 0, n: 13, ref: 'ch. 13', title: 'Acid–Base Volumetric Exam-Style Questions', covers: 'Key formulas; solving exam-style problems; accuracy and precision', topics: ['s4.volumetric'] },
+            { vol: 0, n: 14, ref: 'ch. 14', title: 'Oxidation and Reduction', covers: 'Electron transfer; oxidation numbers; balancing redox equations', topics: ['s3.electrochem'] },
+            { vol: 0, n: 15, ref: 'ch. 15', title: 'Volumetric Analysis: Oxidation–Reduction', covers: 'Potassium permanganate as oxidising agent; MnO₄⁻ and Fe²⁺; redox volumetric problems; iodine and sodium thiosulfate', topics: ['s4.volumetric', 's3.electrochem'] },
+            { vol: 0, n: 16, ref: 'ch. 16', title: 'Oxidation–Reduction Volumetric Exam-Style Questions', covers: 'Key formulas; exam-style problems; random and systematic errors in practical work', topics: ['s4.volumetric'] },
+            { vol: 0, n: 17, ref: 'ch. 17', title: 'Rates of Reaction', covers: 'Reaction rate; measuring rates; factors affecting rates; collision theory and activation energy', topics: ['s3.rates'] },
+            { vol: 0, n: 18, ref: 'ch. 18', title: 'Chemical Equilibrium', covers: 'What equilibrium is; Le Chatelier’s Principle and optimising yield; the equilibrium constant and its calculations', topics: ['s3.equilibrium'] },
+            { vol: 0, n: 19, ref: 'ch. 19', title: 'pH and Indicators', covers: 'Self-ionisation of water; the pH scale; strengths of acids and bases; pH of strong and weak acids and bases; acid–base indicators', topics: ['s3.acids'] },
+            { vol: 0, n: 20, ref: 'ch. 20', title: 'Environmental Chemistry', covers: 'Water as a finite resource; water contamination and treatment; the carbon cycle; the natural and enhanced greenhouse effect; greenhouse gases; climate change and sustainability; solutions', topics: ['s4.environment'] },
+            { vol: 0, n: 21, ref: 'ch. 21', title: 'Thermochemistry', covers: 'Enthalpy change; heat of combustion; bond enthalpy; enthalpy of neutralisation and formation; Hess’s Law; ΔH trends for hydrocarbons and alcohols', topics: ['s3.thermo'] },
+            { vol: 0, n: 22, ref: 'ch. 22', title: 'Electrochemistry', covers: 'Galvanic cells; the electrochemical series; primary and secondary cells; fuel cells; electrolytic cells', topics: ['s3.electrochem'] },
+            { vol: 1, n: 23, ref: 'Exam Guide ch. 23', title: 'Allotropes of Carbon. Hydrocarbons', covers: 'Allotropes; introducing organic chemistry; alkanes, alkenes, cis-trans isomerism, alkynes, aromatic hydrocarbons; shapes and properties; uses of hydrocarbons', topics: ['s2.hydrocarbons'] },
+            { vol: 1, n: 24, ref: 'Exam Guide ch. 24', title: 'More Families of Organic Compounds', covers: 'Chloroalkanes and alcohols; aldehydes, ketones, carboxylic acids and esters; structural isomerism; pharmaceuticals; polymers', topics: ['s4.organic'] },
+            { vol: 1, n: 25, ref: 'Exam Guide ch. 25', title: 'Reactions of Organic Compounds', covers: 'Substitution, addition, elimination, redox and acid–base reactions of organic compounds; reaction schemes', topics: ['s4.organic'] },
+            { vol: 1, n: 26, ref: 'Exam Guide ch. 26', title: 'Stoichiometry: Limiting Reactants and Percentage Yield', covers: 'The limiting reactant; calculating percentage yield', topics: ['s1.mole'] }
+          ] },
         { id: 'lsms-chemistry', title: 'Less Stress More Success — Chemistry', publisher: 'Gill' }
       ],
       strands: [
-        { id: 'atomic', title: 'Atomic structure & the periodic table', topics: [
-          { id: 'atom', title: 'Atomic structure', detail: 'History of the atom, subatomic particles, isotopes, mass spectrometer, electron configuration, emission spectra', weight: 3 },
-          { id: 'periodic', title: 'The periodic table & trends', detail: 'Atomic radius, ionisation energy, electronegativity, group properties', weight: 2 },
-          { id: 'radio', title: 'Radioactivity', detail: 'Alpha, beta, gamma; half-life; uses', weight: 1 }
+        { id: 'u', title: 'Unifying strand — The Nature of Science', topics: [
+          { id: 'nature', title: 'How scientific ideas develop', detail: 'Models, their assumptions and limits; how ideas are revised over time', weight: 2 },
+          { id: 'investigating', title: 'Investigating in chemistry', detail: 'Planning, variables, measurement, uncertainty, analysing and communicating data', weight: 3 },
+          { id: 'society', title: 'Chemistry in society', detail: 'Ethics, sustainability and the role of chemistry in the wider world', weight: 2 },
+          { id: 'aac', title: 'Chemistry in Practice Investigation (40%)', detail: 'The externally assessed research investigation from the common brief', weight: 3 }
         ]},
-        { id: 'bonding', title: 'Chemical bonding', topics: [
-          { id: 'bonds', title: 'Ionic & covalent bonding', detail: 'Electronegativity, polarity, shapes of molecules, intermolecular forces', weight: 3 }
+        { id: 's1', title: 'Strand 1 — Nature of Matter', topics: [
+          { id: 'matter', title: '1.1 Matter', detail: 'Kinetic theory; pure substances and mixtures; changes of state and the limits of the model', weight: 2 },
+          { id: 'atomic', title: '1.2 Atomic structure', detail: 'Nuclear, Bohr and orbital models; proton, neutron and electron; electron configuration; spectra', weight: 3 },
+          { id: 'periodic', title: '1.3 The periodic table', detail: 'Mendeleev and the modern table; trends in radius, ionisation energy and electronegativity; Groups 1, 2, 17 and 18', weight: 2 },
+          { id: 'mole', title: '1.4 Quantifying matter', detail: 'The mole; relating particles, mass, volume and moles; formulas, equations and stoichiometry', weight: 3 }
         ]},
-        { id: 'quant', title: 'Quantitative chemistry', topics: [
-          { id: 'moles', title: 'The mole, formulas & equations', detail: 'Relative masses, mole calculations, empirical formulas, balancing, gas laws', weight: 3 },
-          { id: 'volumetric', title: 'Volumetric analysis', detail: 'Preparing standard solutions, acid–base and redox titrations, calculations', weight: 3 }
+        { id: 's2', title: 'Strand 2 — Behaviour of Matter', topics: [
+          { id: 'bonding', title: '2.1 Chemical bonding', detail: 'The ionic–polar–covalent continuum; electronegativity and bond type; properties of compounds', weight: 3 },
+          { id: 'imf', title: '2.2 Intermolecular forces & molecular shapes', detail: 'Van der Waals forces, dipole–dipole and hydrogen bonding; shapes of molecules', weight: 2 },
+          { id: 'gases', title: '2.3 Behaviour of gases', detail: 'Pressure, volume and temperature relationships; the ideal gas model', weight: 2 },
+          { id: 'hydrocarbons', title: '2.4 Hydrocarbons', detail: 'Alkanes, alkenes, alkynes and aromatics; sources, uses and impact', weight: 3 }
         ]},
-        { id: 'physchem', title: 'Physical chemistry', topics: [
-          { id: 'acids', title: 'Acids, bases & pH', detail: 'Theories of acids and bases, pH scale, indicators, salts', weight: 2 },
-          { id: 'redox', title: 'Oxidation & reduction', detail: 'Oxidation numbers, electrochemical series, electrolysis, corrosion', weight: 2 },
-          { id: 'rates', title: 'Rates of reaction', detail: 'Collision theory, factors affecting rate, catalysis', weight: 2 },
-          { id: 'equilibrium', title: 'Chemical equilibrium', detail: 'Le Chatelier’s principle, equilibrium constant', weight: 2 },
-          { id: 'thermo', title: 'Thermochemistry', detail: 'Heats of reaction, Hess’s law, bond energies, fuels', weight: 2 }
+        { id: 's3', title: 'Strand 3 — Interactions of Matter', topics: [
+          { id: 'thermo', title: '3.1 Thermochemistry', detail: 'Enthalpy change, bond making and breaking, Hess’s law, heats of reaction', weight: 2 },
+          { id: 'rates', title: '3.2 Rates of reaction', detail: 'Collision theory; concentration, surface area, temperature, catalysts and pressure', weight: 2 },
+          { id: 'equilibrium', title: '3.3 Chemical equilibrium', detail: 'Dynamic equilibrium, Le Chatelier’s principle, the equilibrium constant', weight: 2 },
+          { id: 'acids', title: '3.4 Acid–base systems', detail: 'Everyday acids and bases, indicators, neutralisation, pH and strength', weight: 3 },
+          { id: 'electrochem', title: '3.5 Electrochemistry', detail: 'Oxidation and reduction, oxidation numbers, corrosion, cells and electrolysis', weight: 2 }
         ]},
-        { id: 'organic', title: 'Organic chemistry', topics: [
-          { id: 'hydrocarbons', title: 'Hydrocarbons', detail: 'Alkanes, alkenes, alkynes, aromatics; oil refining, octane number, fuels', weight: 3 },
-          { id: 'functional', title: 'Functional groups', detail: 'Alcohols, aldehydes, ketones, carboxylic acids, esters — properties and preparation', weight: 3 },
-          { id: 'mechanisms', title: 'Reaction types & mechanisms', detail: 'Substitution, addition, elimination, oxidation/reduction, polymerisation, organic synthesis', weight: 2 },
-          { id: 'analysis', title: 'Chromatography & instrumentation', detail: 'Paper/TLC/GC, mass spectrometry, IR and UV spectroscopy', weight: 1 }
-        ]},
-        { id: 'env', title: 'Environmental chemistry & options', topics: [
-          { id: 'water', title: 'Water chemistry', detail: 'Hardness, water treatment, dissolved oxygen, BOD, sewage treatment', weight: 2 },
-          { id: 'opt1a', title: 'Option 1A — Additional industrial chemistry', detail: 'Case study of an industrial process', weight: 1 },
-          { id: 'opt1b', title: 'Option 1B — Atmospheric chemistry', detail: 'Oxygen, nitrogen, ozone, acid rain, greenhouse effect', weight: 1 },
-          { id: 'opt2a', title: 'Option 2A — Materials', detail: 'Crystals, addition polymers, metals', weight: 1 },
-          { id: 'opt2b', title: 'Option 2B — Electrochemistry & extraction of metals', detail: 'Electrolysis applications, extraction and corrosion', weight: 1 }
-        ]},
-        { id: 'exps', title: 'Mandatory experiments', topics: [
-          { id: 'titrations', title: 'Titration experiments', detail: 'HCl/NaOH, standardising HCl, ethanoic acid in vinegar, iron tablets, iodine/thiosulfate, water hardness, dissolved oxygen', weight: 3 },
-          { id: 'organicexps', title: 'Organic preparations', detail: 'Ethene, ethyne, soap, ethanal → ethanoic acid, recrystallisation of benzoic acid, chromatography', weight: 3 },
-          { id: 'physexps', title: 'Physical chemistry experiments', detail: 'Rates vs concentration and temperature, heat of reaction, flame tests, pH of solutions', weight: 2 }
+        { id: 's4', title: 'Strand 4 — Matter in our World', topics: [
+          { id: 'volumetric', title: '4.1 Volumetric analysis', detail: 'Standard solutions, acid–base and redox titrations, calculations, accuracy and error', weight: 3 },
+          { id: 'organic', title: '4.2 Reactivity of organic compounds', detail: 'Alcohols, aldehydes, ketones, carboxylic acids, esters; reaction types; fuels, pharmaceuticals, plastics', weight: 3 },
+          { id: 'environment', title: '4.3 Our chemical environment', detail: 'The carbon cycle, greenhouse gases and climate change, water quality and treatment, sustainability', weight: 2 }
         ]}
       ]
     },
 
     /* ---------------------------------------------------------------- Physics */
     'Physics': {
-      source: 'Leaving Certificate Physics syllabus, with the 24 mandatory experiments',
+      source: 'Leaving Certificate Physics specification (2025) — first examined 2027. Unifying strand plus four contextual strands; section numbers are the specification’s own',
+      note: 'Written exam 60%, Physics in Practice Investigation 40% (common brief, externally assessed).',
       books: [
-        { id: 'real-world-physics', title: 'Real World Physics', publisher: 'Folens' },
-        { id: 'lc-physics-educate', title: 'Leaving Certificate Physics', publisher: 'Educate.ie' },
+        { id: 'real-world-physics-2', title: 'Real World Physics 2nd edition (2025)', short: 'Real World Physics', publisher: 'Folens', sectioned: true,
+          chapters: [
+            { n: 1,  ref: 'ch. 1',  title: 'The Nature of Science', covers: 'The nature of scientific knowledge; measurement and units; error in measurements; basic and derived units; scientific notation; unit analysis', topics: ['u.nature', 'u.investigating'] },
+            { n: 2,  ref: 'ch. 2',  title: 'Reflection of Light', covers: 'The nature of light; vision; types of reflection; laws of reflection; the plane mirror image; uses of mirrors', topics: ['s2.interaction'] },
+            { n: 3,  ref: 'ch. 3',  title: 'Refraction of Light', covers: 'Refraction; laws of refraction and refractive index; refractive index and relative speeds; critical angle and total internal reflection; applications', topics: ['s2.interaction'] },
+            { n: 4,  ref: 'ch. 4',  title: 'Lenses', covers: 'Converging and diverging lenses; image formation; lens formulas; uses of lenses; models in physics', topics: ['s2.interaction'] },
+            { n: 5,  ref: 'ch. 5',  title: 'Speed, Displacement and Velocity', covers: 'Time; distance; speed; displacement; velocity; measuring velocity in the laboratory; displacement–time graphs', topics: ['s1.motion'] },
+            { n: 6,  ref: 'ch. 6',  title: 'Acceleration', covers: 'Acceleration; constant acceleration; velocity–time graphs; measuring acceleration; acceleration due to gravity', topics: ['s1.motion'] },
+            { n: 7,  ref: 'ch. 7',  title: 'Vectors and Scalars', covers: 'Physical quantities; vectors in two dimensions; resolving a vector into perpendicular components', topics: ['s1.motion', 's1.forces'] },
+            { n: 8,  ref: 'ch. 8',  title: 'Force, Mass and Momentum', covers: 'Force; mass; the newton; weight and mass; momentum and Newton’s laws; projectiles; conservation of momentum; collisions in two dimensions', topics: ['s1.forces'] },
+            { n: 9,  ref: 'ch. 9',  title: 'Density, Pressure and Gravity', covers: 'Density; pressure; pressure in liquids; buoyancy; pressure in gases and atmospheric pressure; gravity; gravity and weight; gravitational fields; escape velocity', topics: ['s1.gravity', 's1.forces'] },
+            { n: 10, ref: 'ch. 10', title: 'Work, Energy and Power', covers: 'Work; energy; conservation of energy; kinetic and potential energy; renewable and non-renewable sources; power; efficiency', topics: ['s1.energy'] },
+            { n: 11, ref: 'ch. 11', title: 'Circular Motion', covers: 'A particle moving in a circle; centripetal force; circular satellite orbits; near-Earth and geostationary orbits', topics: ['s1.circular'] },
+            { n: 12, ref: 'ch. 12', title: 'Elasticity and Hooke’s Law', covers: 'Elasticity; Hooke’s law; work done in stretching or compressing; energy changes in an oscillating body', topics: ['s1.hooke'] },
+            { n: 13, ref: 'ch. 13', title: 'Temperature and Thermometers', covers: 'Concept of temperature; thermometric properties', topics: ['s2.heat'] },
+            { n: 14, ref: 'ch. 14', title: 'Heat Transfer and Temperature Change', covers: 'States of matter; heat capacity; specific heat capacity; latent heat; specific latent heat; the heat pump; heat transfer', topics: ['s2.heat'] },
+            { n: 15, ref: 'ch. 15', title: 'Waves and Wave Motion', covers: 'Travelling waves; waves as energy transfer; transverse and longitudinal waves; v = fλ; wave behaviour; stationary waves; the Doppler effect', topics: ['s2.waves', 's2.superposition', 's2.effects'] },
+            { n: 16, ref: 'ch. 16', title: 'Vibrations and Sound', covers: 'Sources of sound; sound as a mechanical wave; how vibration produces sound; speed of sound; characteristics of sound; audibility and ultrasound; resonance; standing waves on a string; the sonometer', topics: ['s2.sound', 's2.superposition'] },
+            { n: 17, ref: 'ch. 17', title: 'The Wave Nature of Light', covers: 'Wave nature of light; wavelength and colour; diffraction grating; polarisation; dispersion; the electromagnetic spectrum; solar irradiance', topics: ['s2.em'] },
+            { n: 18, ref: 'ch. 18', title: 'Static Electricity', covers: 'Charging by friction and induction; atomic nature of charge; conductors and insulators; the gold leaf electroscope; distribution of charge; force between charges; electric fields and field strength', topics: ['s3.charge', 's3.fields'] },
+            { n: 19, ref: 'ch. 19', title: 'Potential Difference', covers: 'Potential difference; relationship between potential difference and field strength', topics: ['s3.fields'] },
+            { n: 20, ref: 'ch. 20', title: 'Current and Charge', covers: 'Three effects of current; electric charge; size of a current; conventional current; DC and AC; series and parallel circuits', topics: ['s3.circuits'] },
+            { n: 21, ref: 'ch. 21', title: 'Potential Difference and Electromotive Force', covers: 'Energy changes in a circuit; potential difference between two points; rate of heat production; voltages in series and parallel; emf', topics: ['s3.circuits'] },
+            { n: 22, ref: 'ch. 22', title: 'Resistance', covers: 'Resistance and measuring it; circuit diagrams and symbols; Ohm’s law; resistors in series and parallel; resistance and temperature; resistivity; the potential divider', topics: ['s3.circuits'] },
+            { n: 23, ref: 'ch. 23', title: 'Heating Effect of an Electric Current', covers: 'The heating effect; heat and the current–voltage relationship; high voltage transmission; domestic circuits', topics: ['s3.circuits'] },
+            { n: 24, ref: 'ch. 24', title: 'Semiconductors', covers: 'Semiconductors and conduction; the p-n junction; the LED; the transistor and the transistor as a switch; real-world applications', topics: ['s3.circuits'] },
+            { n: 25, ref: 'ch. 25', title: 'Magnets and Magnetic Fields', covers: 'Properties of magnets; magnetic fields; magnetic effect of a current; fields due to a loop, a coil and a solenoid; uses of permanent and temporary magnets', topics: ['s3.magnets'] },
+            { n: 26, ref: 'ch. 26', title: 'Current in a Magnetic Field', covers: 'Force on a current-carrying conductor; magnetic flux density; force on a coil; force on a moving charge; force between two conductors', topics: ['s3.motor'] },
+            { n: 27, ref: 'ch. 27', title: 'Electromagnetic Induction', covers: 'The generator effect; magnetic flux; Faraday’s and Lenz’s laws; generators; alternating current; mutual inductance; transformers; generating electricity', topics: ['s3.induction'] },
+            { n: 28, ref: 'ch. 28', title: 'The Electron', covers: 'Properties of the electron; thermionic emission; the cathode ray tube; deflection in electric and magnetic fields; the photoelectric effect and photocell; the particle model of light; Einstein’s photoelectric law; applications; X-rays', topics: ['s4.electron', 's4.photoelectric'] },
+            { n: 29, ref: 'ch. 29', title: 'The Atom, the Nucleus and Radioactivity', covers: 'Atoms; emission spectra; the Bohr model; spectroscopy; structure of the nucleus; radioactivity; α, β and γ radiation; the law of radioactive decay; detecting radiation; safety', topics: ['s4.atom', 's4.radioactivity'] },
+            { n: 30, ref: 'ch. 30', title: 'Fission, Fusion and Nuclear Energy', covers: 'Nuclear fission; the atomic bomb; nuclear reactors; nuclear fusion; mass–energy equivalence; mass defect, binding energy and stability', topics: ['s4.massenergy', 's4.nuclear'] },
+            { n: 31, ref: 'ch. 31', title: 'Particle Physics', covers: 'Conservation of energy and momentum in nuclear reactions; splitting the nucleus; antiparticles; accelerators; the fundamental forces; leptons and hadrons; the standard model', topics: ['s4.massenergy'] }
+          ] },
+        { id: 'the-physics-book', title: 'The Physics Book (2025 specification)', short: 'The Physics Book', publisher: 'CJ Fallon' },
         { id: 'lsms-physics', title: 'Less Stress More Success — Physics', publisher: 'Gill' }
       ],
       strands: [
-        { id: 'mechanics', title: 'Mechanics', topics: [
-          { id: 'motion', title: 'Motion & vectors', detail: 'Equations of motion, graphs, vectors and scalars, resolution of vectors', weight: 2 },
-          { id: 'forces', title: 'Forces, Newton’s laws & moments', detail: 'Friction, equilibrium, levers, centre of gravity', weight: 2 },
-          { id: 'energy', title: 'Work, energy, power & momentum', detail: 'Conservation laws, collisions, efficiency', weight: 2 },
-          { id: 'circular', title: 'Circular motion, gravitation & SHM', detail: 'Centripetal force, satellites, Kepler, Hooke’s law, pendulum', weight: 3 },
-          { id: 'pressure', title: 'Density, pressure & gases', detail: 'Archimedes, atmospheric pressure, Boyle’s law', weight: 1 }
+        { id: 'u', title: 'Unifying strand — The Nature of Science', topics: [
+          { id: 'nature', title: 'The nature of scientific knowledge', detail: 'Models, evidence and how ideas change; units, measurement and error', weight: 2 },
+          { id: 'investigating', title: 'Investigating in physics', detail: 'Designing experiments, graphs, uncertainty, analysing and communicating data', weight: 3 },
+          { id: 'aac', title: 'Physics in Practice Investigation (40%)', detail: 'The externally assessed investigation from the common brief', weight: 3 }
         ]},
-        { id: 'heat', title: 'Heat & temperature', topics: [
-          { id: 'heat', title: 'Temperature, heat capacity & latent heat', detail: 'Thermometers, specific heat capacity, latent heat, heat transfer', weight: 2 }
+        { id: 's1', title: 'Strand 1 — Forces and Motion: Kinematics and Dynamics', topics: [
+          { id: 'motion', title: '1.1 Particle motion in a straight line', detail: 'Displacement, velocity, acceleration; equations of motion; motion graphs', weight: 3 },
+          { id: 'forces', title: '1.2 Forces acting on a particle', detail: 'Newton’s laws; mass and centre of mass; types of force; resultant force; momentum', weight: 3 },
+          { id: 'hooke', title: '1.3 Stretching & compressing objects', detail: 'Hooke’s law, elastic potential energy', weight: 1 },
+          { id: 'energy', title: '1.4 A work–energy model', detail: 'Work, kinetic and potential energy, conservation of energy, power', weight: 2 },
+          { id: 'gravity', title: '1.5 Forces in a gravitational field', detail: 'Models for g; Newton’s law of gravitation as an inverse-square law; weight', weight: 2 },
+          { id: 'circular', title: '1.6 Uniform circular motion', detail: 'Centripetal force; gravity as the centripetal force for planets; satellite orbits', weight: 2 }
         ]},
-        { id: 'waves', title: 'Waves, sound & light', topics: [
-          { id: 'waves', title: 'Wave properties', detail: 'Reflection, refraction, diffraction, interference, Doppler effect', weight: 2 },
-          { id: 'sound', title: 'Sound', detail: 'Characteristics, resonance, stationary waves, intensity and the decibel', weight: 2 },
-          { id: 'mirrors', title: 'Reflection & mirrors', detail: 'Laws of reflection, concave and convex mirrors, mirror formula', weight: 2 },
-          { id: 'lenses', title: 'Refraction & lenses', detail: 'Snell’s law, total internal reflection, lenses, the eye, optical fibres', weight: 3 },
-          { id: 'wavelight', title: 'Wave nature of light', detail: 'Diffraction grating, polarisation, dispersion, spectra, the electromagnetic spectrum', weight: 2 }
+        { id: 's2', title: 'Strand 2 — Wave Motion and Energy Transfer', topics: [
+          { id: 'heat', title: '2.1 Heat energy & temperature change', detail: 'Temperature, thermometric properties, Kelvin and Celsius, heat capacity, latent heat', weight: 2 },
+          { id: 'waves', title: '2.2 Travelling waves', detail: 'Energy transfer without matter; mechanical and electromagnetic, transverse and longitudinal waves; wave terms', weight: 2 },
+          { id: 'interaction', title: '2.3 Waves interacting with their environment', detail: 'Ray diagrams, reflection, refraction and refractive index, critical angle and total internal reflection, lenses', weight: 3 },
+          { id: 'em', title: '2.4 Electromagnetic energy', detail: 'The electromagnetic spectrum, ionising radiation, dispersion, irradiance', weight: 2 },
+          { id: 'sound', title: '2.5 Sound energy', detail: 'Sound needs a medium; characteristics of sound; ultrasound', weight: 2 },
+          { id: 'superposition', title: '2.6 Superposition of waves', detail: 'Stationary waves, nodes and antinodes, harmonics, interference', weight: 2 },
+          { id: 'effects', title: '2.7 Wave effects', detail: 'The Doppler effect and its applications', weight: 1 }
         ]},
-        { id: 'electricity', title: 'Electricity', topics: [
-          { id: 'static', title: 'Static electricity & fields', detail: 'Coulomb’s law, electric field, potential, capacitance', weight: 2 },
-          { id: 'current', title: 'Current, resistance & circuits', detail: 'Ohm’s law, resistivity, series and parallel, Wheatstone bridge, potential divider', weight: 3 },
-          { id: 'effects', title: 'Effects of current & domestic electricity', detail: 'Heating, chemical and magnetic effects; fuses, earthing, RCDs, kWh', weight: 2 },
-          { id: 'semi', title: 'Semiconductors', detail: 'p–n junction, diodes, rectification', weight: 1 }
+        { id: 's3', title: 'Strand 3 — Electric and Magnetic Fields and their Interactions', topics: [
+          { id: 'charge', title: '3.1 Charge interactions', detail: 'Charging by friction and induction, conductors and insulators, grounding', weight: 2 },
+          { id: 'fields', title: '3.2 Modelling electric fields', detail: 'Coulomb’s law, electric potential, field strength, the vector nature of fields', weight: 2 },
+          { id: 'circuits', title: '3.3 Electric circuits', detail: 'Current, potential difference and emf; Ohm’s law; series and parallel; resistivity; heating effect; mains safety; semiconductors', weight: 3 },
+          { id: 'magnets', title: '3.4 Magnetic fields', detail: 'Fields around magnets and currents; force on a moving charge; ferrous cores', weight: 2 },
+          { id: 'motor', title: '3.5 Force on a current-carrying conductor', detail: 'The motor effect, Fleming’s rule, the DC motor', weight: 2 },
+          { id: 'induction', title: '3.6 Induced potential difference & the generator effect', detail: 'Magnetic flux, Faraday’s and Lenz’s laws, generators, transformers, mutual inductance', weight: 3 }
         ]},
-        { id: 'magnetism', title: 'Magnetism & electromagnetism', topics: [
-          { id: 'magfields', title: 'Magnetic fields & forces', detail: 'Field around conductors, force on a current, moving charges', weight: 2 },
-          { id: 'induction', title: 'Electromagnetic induction & AC', detail: 'Faraday and Lenz, generators, transformers, mutual and self inductance', weight: 3 }
-        ]},
-        { id: 'modern', title: 'Modern physics', topics: [
-          { id: 'electron', title: 'The electron', detail: 'Cathode rays, thermionic emission, photoelectric effect, X-rays', weight: 2 },
-          { id: 'nuclear', title: 'Radioactivity & nuclear energy', detail: 'Decay, half-life, fission and fusion, detectors', weight: 2 },
-          { id: 'option', title: 'Option — particle physics or applied electricity', detail: 'Whichever your class covers', weight: 1 }
-        ]},
-        { id: 'exps', title: 'Mandatory experiments', topics: [
-          { id: 'mechexps', title: 'Mechanics & heat experiments', detail: 'g by free fall, Newton’s second law, conservation of momentum, Boyle’s law, specific heat capacity, latent heat', weight: 3 },
-          { id: 'waveexps', title: 'Waves & light experiments', detail: 'Speed of sound, wavelength with a grating, focal lengths, refractive index, resonance', weight: 3 },
-          { id: 'elecexps', title: 'Electricity experiments', detail: 'Joule’s law, resistivity, I–V characteristics, variation of resistance with temperature', weight: 3 }
+        { id: 's4', title: 'Strand 4 — Modern Physics: Atomic and Nuclear', topics: [
+          { id: 'electron', title: '4.1 The electron', detail: 'The electron as the unit of charge; cathode rays; deflection in fields', weight: 2 },
+          { id: 'photoelectric', title: '4.2 Photoelectric emission & X-ray production', detail: 'The photoelectric effect, the particle model of light, X-rays', weight: 2 },
+          { id: 'atom', title: '4.3 Early models of the atom', detail: 'Thomson, Rutherford and Bohr; energy levels and quantum leaps', weight: 2 },
+          { id: 'radioactivity', title: '4.4 Radioactivity', detail: 'Detecting ionising radiation; isotopes and stability; α, β, γ; decay and half-life', weight: 2 },
+          { id: 'massenergy', title: '4.5 Mass–energy equivalence', detail: 'Splitting the nucleus, accelerators, the standard model, matter and antimatter', weight: 2 },
+          { id: 'nuclear', title: '4.6 Harnessing nuclear energy', detail: 'Chain reactions, fission and fusion, reactors, annihilation', weight: 2 }
         ]}
       ]
     },
 
-    /* ---------------------------------------------------------------- English */
     'English': {
       source: 'Leaving Certificate English syllabus — Paper 1 (Language) and Paper 2 (Literature)',
       note: 'Prescribed texts and poets change by year and by school. Add your own texts and poets as topics under the headings below.',
@@ -331,18 +458,20 @@ window.SYLLABUS = {
     },
 
     /* ------------------------------------------------------------------ Irish */
+    /* ------------------------------------------------------------------ Irish */
     'Irish': {
-      source: 'Siollabas Gaeilge na hArdteistiméireachta — Béaltriail (40%), Páipéar 1, Páipéar 2',
-      note: 'Seiceáil na téacsanna ainmnithe le do mhúinteoir — the prescribed literature list below is the current one, but confirm it matches what your class is doing.',
+      source: 'Siollabas Gaeilge na hArdteistiméireachta — Béaltriail (40%), Páipéar 1, Páipéar 2. Litríocht ainmnithe: the list prescribed for the 2027 examination onwards',
+      note: 'The prescribed prose and poetry changed for the 2027 exam — the list below is the new one. Confirm your class’s choices with your teacher.',
       books: [
-        { id: 'fiuntas-nua', title: 'Fiúntas Nua', publisher: 'CJ Fallon' },
-        { id: 'spreagadh', title: 'Spreagadh' },
+        { id: 'fiuntas-nua', title: 'Fiúntas Nua (Ardleibhéal, 2025 — Prós agus Filíocht Nua)', short: 'Fiúntas Nua', publisher: 'Edco' },
+        { id: 'fuinneamh-nua', title: 'Fuinneamh Nua (Gnáthleibhéal, 2025 — Prós agus Filíocht Nua)', short: 'Fuinneamh Nua', publisher: 'Edco' },
+        { id: 'bua-na-teanga', title: 'Bua na Teanga (Béaltriail)', short: 'Bua na Teanga' },
         { id: 'lsms-irish', title: 'Less Stress More Success — Irish', publisher: 'Gill' }
       ],
       strands: [
         { id: 'beal', title: 'Béaltriail — an scrúdú cainte (40%)', paper: 'Oral', topics: [
           { id: 'failtiu', title: 'Fáiltiú', detail: 'Beannú, eolas pearsanta, dáta breithe, seoladh, uimhir scrúdaithe', weight: 1 },
-          { id: 'leamhfil', title: 'Léamh na filíochta', detail: 'Na cúig dhán ainmnithe a léamh go nádúrtha le foghraíocht cheart', weight: 2 },
+          { id: 'leamhfil', title: 'Léamh na filíochta', detail: 'Na dánta ainmnithe a léamh go nádúrtha le foghraíocht cheart', weight: 2 },
           { id: 'sraith', title: 'Sraith pictiúr', detail: 'Na fiche sraith — cur síos agus na ceisteanna a leanann', weight: 3 },
           { id: 'comhra', title: 'Comhrá', detail: 'Mé féin, mo cheantar, an scoil, caitheamh aimsire, an todhchaí, fadhbanna sóisialta, nuacht', weight: 3 }
         ]},
@@ -353,20 +482,21 @@ window.SYLLABUS = {
         ]},
         { id: 'p2', title: 'Páipéar 2 — Léamhthuiscint & litríocht', paper: 'Paper 2', topics: [
           { id: 'leamh', title: 'Léamhthuiscint', detail: 'Dhá phíosa; ceisteanna tuisceana agus ceist gramadaí', weight: 3 },
-          { id: 'pros', title: 'Prós ainmnithe', detail: 'Hurlamaboc, An Gnáthrud, Dís, Oisín i dTír na nÓg, Cáca Milis (scannán)', weight: 3 },
-          { id: 'filiocht', title: 'Filíocht ainmnithe', detail: 'Géibheann, Colscaradh, Mo Ghrá-sa (idir lúibíní), An tEarrach Thiar, An Spailpín Fánach', weight: 3 },
-          { id: 'breise', title: 'Litríocht bhreise', detail: 'An Triail nó an téacs breise atá ag do rang; stair na Gaeilge', weight: 2, hl: true },
+          { id: 'pros', title: 'Prós ainmnithe (comónta)', detail: 'Clann Lir · Athair · Glantóir · An Bóthar go Santiago · Cuairteoir · An tIriseoir · Eoinín na nÉan (gearrscannán) · An Féileacán agus an Crann Úll', weight: 3 },
+          { id: 'filiocht', title: 'Filíocht ainmnithe (comónta)', detail: 'Dínit an Bhróin · Deireadh na Feide · Iníon · Glaoch Abhaile · Úirchill an Chreagáin', weight: 3 },
+          { id: 'filiochtard', title: 'Filíocht ardleibhéil', detail: 'Trén bhFearann Breac · Eanáir 1991 · Ag Tiomáint Siar · Dijeridiú · Anthony Daly', weight: 3, hl: true },
+          { id: 'breise', title: 'Litríocht bhreise & stair na Gaeilge', detail: 'An téacs breise atá ag do rang; stair na Gaeilge', weight: 2, hl: true },
           { id: 'gramadach', title: 'Gramadach', detail: 'Na haimsirí, séimhiú agus urú, an tuiseal ginideach, an chopail, an aidiacht', weight: 2 }
         ]}
       ]
     },
 
-    /* -------------------------------------------------------------- Geography */
     'Geography': {
       source: 'Leaving Certificate Geography syllabus — core units, one elective, one option (HL)',
       note: 'Switch off the elective and option your class is not doing.',
       books: [
         { id: 'horizons', title: 'Horizons', publisher: 'Edco' },
+        { id: 'landscapes', title: 'Landscapes — Core Units with Human or Economic elective', short: 'Landscapes', publisher: 'Gill' },
         { id: 'planet-people', title: 'Planet and People', publisher: 'Educate.ie' },
         { id: 'lsms-geog', title: 'Less Stress More Success — Geography', publisher: 'Gill' }
       ],
@@ -413,8 +543,10 @@ window.SYLLABUS = {
       source: 'Leaving Certificate History (Later Modern) — Ireland and Europe & the wider world topics',
       note: 'Your class studies a few of these topics, not all of them. Switch off the ones you are not doing.',
       books: [
-        { id: 'making-modern', title: 'The Making of Modern Ireland / Europe', publisher: 'Edco' },
-        { id: 'modern-ireland-europe', title: 'Modern Ireland / Modern Europe and the Wider World', publisher: 'Gill' }
+        { id: 'making-of-europe', title: 'The Making of Europe and the Wider World', short: 'Making of Europe', publisher: 'Edco' },
+        { id: 'us-and-the-world', title: 'The United States and the World (Europe topic 6)', short: 'US and the World', publisher: 'Edco' },
+        { id: 'modern-ireland-europe', title: 'Modern Ireland / Modern Europe and the Wider World', publisher: 'Gill' },
+        { id: 'edco-case-studies', title: 'Edco Leaving Cert History Case Studies', short: 'Case Studies', publisher: 'Edco' }
       ],
       strands: [
         { id: 'rsr', title: 'Research study report & documents question', topics: [
@@ -464,57 +596,86 @@ window.SYLLABUS = {
     },
 
     /* --------------------------------------------------------------- Business */
+    /* --------------------------------------------------------------- Business */
     'Business': {
-      source: 'Leaving Certificate Business syllabus — seven units',
-      note: 'The Applied Business Question (ABQ) is worth 20%; practise applying theory to the case.',
+      source: 'Leaving Certificate Business specification (2025) — first examined 2027. Unifying strand Investigating Business plus four strands; section numbers are the specification’s own',
+      note: 'Written exam 60%, Business Alive Investigative Study 40% (common brief, externally assessed).',
       books: [
-        { id: 'business-express', title: 'Business Express', publisher: 'Edco' },
-        { id: 'inside-business', title: 'Inside Business', publisher: 'Folens' },
-        { id: 'lsms-business', title: 'Less Stress More Success — Business', publisher: 'Gill' }
+        { id: 'lets-do-business', title: 'Let’s Do Business (2025 specification)', short: 'Let’s Do Business', publisher: 'Edco',
+          chapters: [
+            { n: 1,  ref: 'ch. 1',  title: 'The Unifying Strand', covers: 'Developing questions to research, managing information, project planning, analysing and evaluating information, presenting findings, acknowledging sources', topics: ['u.research', 'u.aac'] },
+            { n: 2,  ref: 'ch. 2',  title: 'Stakeholders', covers: 'Stakeholder mapping', topics: ['s1.stakeholders'] },
+            { n: 3,  ref: 'ch. 3',  title: 'Forms of Business', covers: 'Types of enterprise including not-for-profit; their contribution locally and nationally', topics: ['s1.forms'] },
+            { n: 4,  ref: 'ch. 4',  title: 'Business Regulation', covers: 'Regulation and governance; ESG reports', topics: ['s1.forms'] },
+            { n: 5,  ref: 'ch. 5',  title: 'Economic Indicators', covers: 'Value of the business economy in Ireland; consumer confidence', topics: ['s1.economy'] },
+            { n: 6,  ref: 'ch. 6',  title: 'National Policy', covers: 'Government policy and its impact on sectors', topics: ['s1.policy'] },
+            { n: 7,  ref: 'ch. 7',  title: 'European Union', covers: 'EU regulations and directives', topics: ['s1.policy'] },
+            { n: 8,  ref: 'ch. 8',  title: 'International Business', covers: 'Trade, trading blocs, international business', topics: ['s1.global'] },
+            { n: 9,  ref: 'ch. 9',  title: 'Internationalisation and Globalisation', covers: 'Globalisation, FDI and the role of technology', topics: ['s1.global'] },
+            { n: 10, ref: 'ch. 10', title: 'Enterprise', covers: 'Enterprise in its broadest sense; role of government', topics: ['s2.enterprise'] },
+            { n: 11, ref: 'ch. 11', title: 'Idea Development', covers: 'Design thinking', topics: ['s2.ideas'] },
+            { n: 12, ref: 'ch. 12', title: 'Business Planning', covers: 'Business models; the Business Model Canvas', topics: ['s2.planning'] },
+            { n: 13, ref: 'ch. 13', title: 'Market Research and Market Analysis', covers: 'Power–interest grid; STEEPLE analysis', topics: ['s2.market'] },
+            { n: 14, ref: 'ch. 14', title: 'Marketing Mix', covers: 'The 7Ps; USP analysis; developing and evaluating a marketing mix', topics: ['s2.market'] },
+            { n: 15, ref: 'ch. 15', title: 'Operations and Finance', covers: 'Operational model — key partnerships, activities and resources', topics: ['s2.operations'] },
+            { n: 16, ref: 'ch. 16', title: 'Growth, Development and Expansion', covers: 'Porter’s Five Forces; cost–benefit analysis', topics: ['s2.growth'] },
+            { n: 17, ref: 'ch. 17', title: 'Managing Risk', covers: 'Risk management', topics: ['s2.risk'] },
+            { n: 18, ref: 'ch. 18', title: 'Leading and Managing an Organisation', covers: 'Organisational culture; workplace conflict and its management', topics: ['s3.organisation'] },
+            { n: 19, ref: 'ch. 19', title: 'Leading and Managing People', covers: 'Ethics in recruitment; digital technology and recruitment; appraisal', topics: ['s3.people'] },
+            { n: 20, ref: 'ch. 20', title: 'Human Capital Management', covers: 'The organisational environment; sustainable workplaces; digital technology; remote working; corporate wellness', topics: ['s3.people'] },
+            { n: 21, ref: 'ch. 21', title: 'The Importance of Communication', covers: 'Communication in business', topics: ['s3.communication'] },
+            { n: 22, ref: 'ch. 22', title: 'The Rationale for Planning', covers: 'Resistance to change and overcoming it', topics: ['s3.planning'] },
+            { n: 23, ref: 'ch. 23', title: 'Force Field Analysis and Strategic Planning', covers: 'Strategic planning; force field analysis; contingency planning', topics: ['s3.planning'] },
+            { n: 24, ref: 'ch. 24', title: 'Consumer Rights and Responsibilities', covers: 'Consumer law and protection', topics: ['s4.consumer'] },
+            { n: 25, ref: 'ch. 25', title: 'Making Informed Consumer Decisions', covers: 'Ethics, sustainability and consumer behaviour; consumer behaviour and digital technology', topics: ['s4.consumer'] },
+            { n: 26, ref: 'ch. 26', title: 'Making Informed Financial Decisions', covers: 'Risk tolerance; switching financial products; fintech; credit ratings', topics: ['s4.financial'] },
+            { n: 27, ref: 'ch. 27', title: 'Financial Regulation', covers: 'Financial services regulation; consumer protection; digital currencies', topics: ['s4.financial'] },
+            { n: 28, ref: 'ch. 28', title: 'Being an Informed Employee', covers: 'Employment rights and responsibilities', topics: ['s4.employee'] },
+            { n: 29, ref: 'ch. 29', title: 'Employee Governance', covers: 'The gig-based economy', topics: ['s4.employee'] }
+          ] },
+        { id: 'inside-business', title: 'Inside Business (2025 specification)', short: 'Inside Business', publisher: 'Edco' },
+        { id: 'back-in-business', title: 'Back in Business', publisher: 'GD Education' },
+        { id: 'making-it-happen', title: 'Making it Happen', publisher: 'Folens' }
       ],
       strands: [
-        { id: 'u1', title: 'Unit 1 — People in business', topics: [
-          { id: 'stakeholders', title: 'Stakeholders & their relationships', detail: 'Co-operative and competitive relationships, contracts', weight: 2 },
-          { id: 'consumer', title: 'Consumer law', detail: 'Sale of Goods and Supply of Services Act, Consumer Protection Act, CCPC, Ombudsman', weight: 3 },
-          { id: 'industrial', title: 'Industrial relations & employment law', detail: 'Trade unions, types of disputes, WRC and Labour Court, Employment Equality and Unfair Dismissals Acts', weight: 3 }
+        { id: 'u', title: 'Unifying strand — Investigating Business', topics: [
+          { id: 'research', title: 'Investigating business', detail: 'Developing research questions, managing information, project planning, analysing, presenting findings, acknowledging sources', weight: 2 },
+          { id: 'aac', title: 'Business Alive Investigative Study (40%)', detail: 'The externally assessed investigative study from the common brief', weight: 3 }
         ]},
-        { id: 'u2', title: 'Unit 2 — Enterprise', topics: [
-          { id: 'enterprise', title: 'Entrepreneurs & enterprise skills', detail: 'Characteristics, skills, intrapreneurship, enterprise in the community', weight: 2 }
+        { id: 's1', title: 'Strand 1 — Exploring the Business Environment', topics: [
+          { id: 'stakeholders', title: '1.1 Key stakeholders in business', detail: 'Who the stakeholders are and how their interests relate', weight: 2 },
+          { id: 'forms', title: '1.2 Forms of business, regulation & governance', detail: 'Public, private, semi-state and not-for-profit; ownership over a business lifecycle; internal and external regulation; ESG', weight: 3 },
+          { id: 'economy', title: '1.3 Business and the economy', detail: 'Inflation, employment, interest rates, growth, exchange rates and consumer confidence; the value of the business economy', weight: 2 },
+          { id: 'policy', title: '1.4 National and EU policy', detail: 'Government policy vs legislation, lobbying and interest groups, EU institutions, regulations and directives', weight: 2 },
+          { id: 'global', title: '1.5 Irish business globally', detail: 'Trade, trading blocs, globalisation, FDI and technology', weight: 2 }
         ]},
-        { id: 'u3', title: 'Unit 3 — Managing 1', topics: [
-          { id: 'mgtskills', title: 'Management skills', detail: 'Leading, motivating (Maslow, McGregor), communicating; meetings and reports', weight: 3 },
-          { id: 'mgtactivities', title: 'Management activities', detail: 'Planning, organising (structures), controlling (stock, credit, quality)', weight: 3 }
+        { id: 's2', title: 'Strand 2 — Understanding Enterprise', topics: [
+          { id: 'enterprise', title: '2.1 Enterprise in its broadest sense', detail: 'Enterprise and entrepreneurship in business, community and public life; the role of government', weight: 2 },
+          { id: 'ideas', title: '2.2 Idea development', detail: 'Generating and developing ideas; design thinking', weight: 2 },
+          { id: 'planning', title: '2.3 Business planning', detail: 'Business models and the Business Model Canvas; the business plan', weight: 3 },
+          { id: 'market', title: '2.4 The target market', detail: 'Market research and analysis, segmentation, the marketing mix (7Ps), USP', weight: 3 },
+          { id: 'operations', title: '2.5 Operations and finance', detail: 'Operational model, key resources and partnerships, sources of finance, cash flow', weight: 3 },
+          { id: 'growth', title: '2.6 Growth, development & expansion', detail: 'Reasons and methods for expansion; Porter’s Five Forces; cost–benefit analysis', weight: 2 },
+          { id: 'risk', title: '2.7 Managing risk', detail: 'Identifying, assessing and managing business risk', weight: 2 }
         ]},
-        { id: 'u4', title: 'Unit 4 — Managing 2', topics: [
-          { id: 'hrm', title: 'Human resource management', detail: 'Planning, recruitment, training, appraisal, rewards, employer–employee relations', weight: 2 },
-          { id: 'change', title: 'Changing role of management', detail: 'Facilitator, empowerment, teamwork, TQM, technology', weight: 2 },
-          { id: 'finance', title: 'Monitoring the business — finance', detail: 'Sources of finance, cash flow, ratio analysis, insurance, taxation', weight: 3 },
-          { id: 'household', title: 'Household & business', detail: 'Comparing household and business management', weight: 1 }
+        { id: 's3', title: 'Strand 3 — Leading in Business', topics: [
+          { id: 'organisation', title: '3.1 Leading & managing an organisation', detail: 'Leadership styles, organisational culture, structures, managing conflict', weight: 3 },
+          { id: 'people', title: '3.2 Leading & managing people', detail: 'Recruitment and ethics, motivation, appraisal, human capital, sustainable and remote workplaces', weight: 3 },
+          { id: 'communication', title: '3.3 The importance of communication', detail: 'Internal and external communication, meetings, reports, digital channels', weight: 2 },
+          { id: 'planning', title: '3.4 The rationale for planning', detail: 'Strategic and contingency planning, force field analysis, managing change', weight: 2 }
         ]},
-        { id: 'u5', title: 'Unit 5 — Business in action', topics: [
-          { id: 'marketing', title: 'Identifying opportunities & marketing', detail: 'Market research, product development, the marketing mix', weight: 3 },
-          { id: 'startup', title: 'Getting started', detail: 'Ownership structures, finance, production, the business plan', weight: 3 },
-          { id: 'expansion', title: 'Expansion', detail: 'Organic and inorganic growth, implications of expansion', weight: 2 }
-        ]},
-        { id: 'u6', title: 'Unit 6 — Domestic environment', topics: [
-          { id: 'industry', title: 'Categories of industry & types of organisation', detail: 'Primary, secondary, tertiary; sole trader, company, co-op, franchise, state bodies', weight: 2 },
-          { id: 'community', title: 'Community development', detail: 'Local enterprise, LEOs, social enterprise', weight: 1 },
-          { id: 'economy', title: 'Business & the economy', detail: 'Economic variables, the effect of business on the economy', weight: 2 },
-          { id: 'government', title: 'Government & business', detail: 'Regulation, support, employment, tax, infrastructure', weight: 2 },
-          { id: 'ethics', title: 'Business & society', detail: 'Ethics, social responsibility, environmental issues', weight: 2 }
-        ]},
-        { id: 'u7', title: 'Unit 7 — International environment', topics: [
-          { id: 'eu', title: 'The European Union', detail: 'Institutions, decision making, policies, the euro', weight: 2 },
-          { id: 'global', title: 'International trade & global business', detail: 'Exporting, MNCs, protectionism, WTO, global marketing', weight: 2 }
+        { id: 's4', title: 'Strand 4 — Being Informed and Making Informed Decisions', topics: [
+          { id: 'consumer', title: '4.1 Informed consumer decisions', detail: 'Consumer rights and responsibilities, consumer law, ethical and sustainable choices, digital consumer behaviour', weight: 3 },
+          { id: 'financial', title: '4.2 Informed financial decisions', detail: 'Personal finance, risk tolerance, switching products, fintech, credit ratings, financial regulation, digital currencies', weight: 3 },
+          { id: 'employee', title: '4.3 Being an informed employee', detail: 'Employment rights and responsibilities, employee governance, the gig economy', weight: 2 }
         ]}
       ]
     },
 
-    /* ------------------------------------------------------------- Accounting */
     'Accounting': {
       source: 'Leaving Certificate Accounting syllabus — financial and management accounting',
       books: [
-        { id: 'accounting-tyrrell', title: 'Accounting for Senior Cycle', publisher: 'Edco' },
+        { id: 'accounting-senior-cycle-4', title: 'Accounting for Senior Cycle, 4th edition (Kielthy & Tyrrell)', short: 'Accounting for Senior Cycle', publisher: 'Edco' },
         { id: 'lsms-accounting', title: 'Less Stress More Success — Accounting', publisher: 'Gill' }
       ],
       strands: [
@@ -546,7 +707,9 @@ window.SYLLABUS = {
     /* ----------------------------------------------------------- Applied Maths */
     'Applied Maths': {
       source: 'Leaving Certificate Applied Mathematics specification (2021) — four strands',
-      books: [],
+      books: [
+        { id: 'fundamental-applied-maths-3', title: 'Fundamental Applied Maths, 3rd edition (Oliver Murphy)', short: 'Fundamental Applied Maths', publisher: 'Folens' }
+      ],
       strands: [
         { id: 's1', title: 'Strand 1 — Mathematical modelling', topics: [
           { id: 'modelling', title: 'The modelling cycle', detail: 'Formulating, solving, interpreting and refining models', weight: 1 }
@@ -574,7 +737,9 @@ window.SYLLABUS = {
     'Home Economics': {
       source: 'Leaving Certificate Home Economics (Scientific & Social) syllabus — core plus one elective',
       note: 'Switch off the two electives your class is not taking.',
-      books: [],
+      books: [
+        { id: 'complete-home-ec-2', title: 'Complete Home Economics, 2nd edition (Gillick & Healy)', short: 'Complete Home Economics', publisher: 'Educate.ie' }
+      ],
       strands: [
         { id: 'food', title: 'Core — Food studies', topics: [
           { id: 'nutrients', title: 'Nutrients', detail: 'Protein, carbohydrates, lipids, vitamins, minerals, water — structure, properties, functions', weight: 3 },
@@ -603,16 +768,46 @@ window.SYLLABUS = {
 
     /* ------------------------------------------------------------- Languages */
     'French': languageSyllabus('French', [
-      { id: 'tout-va-bien', title: 'Tout va bien!', publisher: 'Folens' },
+      /* Units, grammar and exam-preparation focus from the 4th edition's own
+         detailed contents table (Folens, 2025). */
+      { id: 'tout-va-bien-4', title: 'Tout va bien! 4th edition (2025)', short: 'Tout va bien!', publisher: 'Folens', sectioned: true,
+        chapters: [
+          { n: 1, ref: 'Unité 1', title: 'Bonjour, je me présente', covers: 'Descriptions, personality, dates and numbers · Oral: parler de soi · Writing: le texte à trous, le formulaire, la question d’opinion · Grammar: le présent, les verbes pronominaux · Exam: la compréhension écrite', topics: ['oral.conversation', 'reading.journalistic', 'language.tenses'] },
+          { n: 2, ref: 'Unité 2', title: 'La vie en famille', covers: 'Family, relationships, chores, equality · Oral: la famille · Writing: la question d’opinion · Grammar: adjectives, negation, questions · Exam: la production écrite — la question d’opinion', topics: ['oral.conversation', 'writing.opinion', 'language.grammar'] },
+          { n: 3, ref: 'Unité 3', title: 'Chez moi', covers: 'Housing, my area, town and country, nationalities, la francophonie · Oral: mon quartier · Grammar: le passé composé, l’imparfait · Exam: l’épreuve orale', topics: ['oral.conversation', 'oral.document', 'language.tenses'] },
+          { n: 4, ref: 'Unité 4', title: 'La vie des jeunes', covers: 'Friends, weekends, fashion, pocket money and part-time jobs, celebrities · Oral: les sorties et les amis · Grammar: le passé récent, le futur proche, le futur simple · Exam: le journal intime', topics: ['oral.conversation', 'writing.diary', 'language.tenses'] },
+          { n: 5, ref: 'Unité 5', title: 'À l’école', covers: 'School systems, subjects, technology, careers, languages · Oral: l’école et l’avenir · Grammar: le conditionnel, adverbs, si clauses · Exam: la compréhension orale', topics: ['oral.conversation', 'listening.aural', 'language.tenses'] },
+          { n: 6, ref: 'Unité 6', title: 'Mon temps libre', covers: 'Hobbies, reading, TV, cinema, sport, music · Oral: mes passe-temps · Grammar: articles, prepositions · Exam: la production écrite — le récit', topics: ['oral.conversation', 'writing.narrative', 'language.grammar'] },
+          { n: 7, ref: 'Unité 7', title: 'Vive les vacances !', covers: 'Holidays, travel, tourism, weather, transport, environment · Oral: les vacances · Grammar: personal and relative pronouns · Exam: la lettre informelle', topics: ['oral.conversation', 'writing.diary', 'language.grammar', 'language.themes'] },
+          { n: 8, ref: 'Unité 8', title: 'Le bien-être physique et digital', covers: 'Health, food, addiction, technology · Oral: le bien-être · Grammar: le plus-que-parfait, le passé simple · Exam: la carte postale et le message', topics: ['oral.conversation', 'writing.diary', 'language.tenses', 'language.themes'] },
+          { n: 9, ref: 'Unité 9', title: 'Le monde actuel', covers: 'Society today, social problems, politics, the EU · Oral: la société irlandaise · Grammar: l’impératif, le subjonctif · Exam: la lettre formelle', topics: ['oral.conversation', 'writing.formal', 'writing.opinion', 'language.tenses'] }
+        ] },
+      { id: 'a-la-une', title: 'À La Une (Webb & Voyard-Venant)', short: 'À La Une' },
       { id: 'lsms-french', title: 'Less Stress More Success — French', publisher: 'Gill' }
     ]),
     'German': languageSyllabus('German', [
+      { id: 'deutsch-komplett-2', title: 'Deutsch Komplett, 2nd edition', short: 'Deutsch Komplett', publisher: 'Folens' },
+      { id: 'auf-kurs', title: 'Auf Kurs (Braun-McCarthy & Caton)', short: 'Auf Kurs' },
       { id: 'lsms-german', title: 'Less Stress More Success — German', publisher: 'Gill' }
     ]),
     'Spanish': languageSyllabus('Spanish', [
+      { id: 'exito', title: 'Éxito (Hilliard & Tomás Cebollada)', short: 'Éxito', publisher: 'Educate.ie' },
+      { id: 'espanol-en-accion-2', title: 'Español en acción, 2nd edition', short: 'Español en acción' },
       { id: 'lsms-spanish', title: 'Less Stress More Success — Spanish', publisher: 'Gill' }
     ]),
-    'Italian': languageSyllabus('Italian', [])
+    'Italian': languageSyllabus('Italian', []),
+
+    /* No built-in topic list yet — the books are listed so chapters can be mapped once
+       the student adds the topics their class covers. */
+    'Economics': {
+      source: 'Leaving Certificate Economics specification (2019) — topics to be added by the student',
+      note: '',
+      books: [
+        { id: 'economics-now', title: 'Economics Now (Michael Ruane)', short: 'Economics Now', publisher: 'Gill' },
+        { id: 'positive-economics', title: 'Positive Economics', publisher: 'Edco' }
+      ],
+      strands: []
+    }
   }
 };
 
@@ -637,7 +832,8 @@ function languageSyllabus(name, books) {
       { id: 'writing', title: 'Written production', paper: 'Written', topics: [
         { id: 'opinion', title: 'Opinion piece & discursive writing', detail: 'Structuring an argument, connectors, formal register', weight: 3 },
         { id: 'diary', title: 'Diary entry & informal message', detail: 'Reacting to a situation, feelings, past and future tenses', weight: 2 },
-        { id: 'formal', title: 'Formal letter or email', detail: 'Layout, formal phrases, complaints, applications', weight: 2 }
+        { id: 'formal', title: 'Formal letter or email', detail: 'Layout, formal phrases, complaints, applications', weight: 2 },
+        { id: 'narrative', title: 'Narrative writing', detail: 'Recounting events and telling a story in the past tenses', weight: 2 }
       ]},
       { id: 'language', title: 'Vocabulary & grammar', topics: [
         { id: 'themes', title: 'Vocabulary by theme', detail: 'Family, school, work, health, environment, technology, travel, current affairs', weight: 2 },

@@ -53,17 +53,28 @@ that is usually when homework is wanted. Open a class in the timetable and there
 strand by strand, at the size of a single study block. Twelve subjects ship with a full
 topic list (Irish, English, Maths, Biology, Chemistry, Physics, Geography, History,
 Business, Accounting, Applied Maths, Home Economics) and the modern languages share one;
-anything else starts blank and you add the topics your class covers. For every topic you
-can:
+anything else starts blank and you add the topics your class covers.
+
+Biology, Chemistry, Physics and Business follow the **revised specifications introduced in
+September 2025 and first examined in 2027** — unifying strand, contextual strands and
+the specification's own section numbers, with the 40% Investigation / Investigative Study
+listed as a topic in its own right. Irish carries the **prescribed literature for 2027
+onwards**. Both were taken from the NCCA specification documents and the publishers'
+own 2025 materials, not from memory.
+
+For every topic you can:
 
 - **rate it** — tap the circle to cycle not rated → shaky (red) → getting there (gold) → solid (green);
 - **map it to your book** — pick your textbook from the common ones (or type another) and
   enter the chapter number from its contents page. Where a book's chapter list has been
-  checked against the edition — currently **Text & Tests 4 and 5** for Higher Level Maths,
-  all 22 chapters across the two volumes — picking the book fills every chapter field for
-  you and shows a contents card with what each chapter covers. For every other book the
-  numbers come from your own copy, because editions differ and a wrong one is worse than
-  a blank;
+  checked against the edition, picking the book fills every chapter field for you and
+  shows a contents card. Verified so far, from the books' own contents pages or the
+  publishers' chapter maps: **Text & Tests 4 and 5** and **Active Maths 4 (Books 1 & 2)**
+  for Maths; **Biology Plus (2025)**; **Chemistry Live! 3rd edition** and **Real World
+  Physics 2nd edition** with their section headings; **Let's Do Business**; and **Tout va
+  bien! 4th edition** for French. The remaining titles on 2025/26 school booklists are
+  listed by name for you to map yourself, because editions differ and a wrong chapter is
+  worse than a blank;
 - **switch strands off** — options and electives your teacher is not doing come out of the
   planner with one tick;
 - **add your own** — set texts, poets, case studies, or an entire syllabus for a subject
