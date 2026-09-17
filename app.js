@@ -176,6 +176,7 @@
     planTab: 'timetable',
     pointsSource: 'target',
     sylSubject: null,
+    openChaps: {},
     ttDay: defaultTtDay()
   };
 
@@ -637,7 +638,8 @@
     return '<div class="block">' +
       '<span class="chip" style="background:' + subjectColor(b.subjectId) + '"></span>' +
       '<span class="time">' + esc(b.start) + '</span>' +
-      '<span class="nm">' + esc(subjectName(b.subjectId)) + (b.topic ? ' <span class="muted small">· ' + esc(b.topic) + '</span>' : '') + '</span>' +
+      '<span class="nm">' + esc(subjectName(b.subjectId)) + (b.topic ? ' <span class="muted small">· ' + esc(b.topic) + '</span>' : '') +
+        (b.focus ? '<span class="focus">Start with: ' + esc(b.focus) + '</span>' : '') + '</span>' +
       '<span class="len">' + dur(b.mins) + '</span>' +
       '<button class="icon-btn" data-action="del-block" data-id="' + b.id + '" aria-label="Remove">&times;</button>' +
       '</div>';
@@ -748,6 +750,23 @@
     var entry = bookEntry(subjectId);
     if (!entry || !entry.chapters) return 0;
     var b = bookFor(subjectId);
+    var refs = bookChapterRefs(subjectId, entry);
+    var n = 0;
+    Object.keys(refs).forEach(function (id) {
+      if (overwrite || !b.ch[id]) { b.ch[id] = refs[id]; n++; }
+    });
+    return n;
+  }
+  /* Changing book: chapter fields still holding the old book's own fill are cleared
+     so the new book can fill them; anything the student typed is left alone. */
+  function clearBookChapters(subjectId, entry) {
+    if (!entry || !entry.chapters) return;
+    var b = bookFor(subjectId);
+    var refs = bookChapterRefs(subjectId, entry);
+    Object.keys(refs).forEach(function (id) { if (b.ch[id] === refs[id]) delete b.ch[id]; });
+  }
+  /* topicId → "ch. 8 & 10" for every topic a book's chapters cover. */
+  function bookChapterRefs(subjectId, entry) {
     var refs = {};
     entry.chapters.forEach(function (c) {
       (c.topics || []).forEach(function (t) {
@@ -755,35 +774,139 @@
         (refs[id] = refs[id] || []).push(c.ref);
       });
     });
-    /* "ch. 7" + "ch. 9" → "ch. 7 & 9"; a run becomes "Unité 1–9"; mixed
-       prefixes (two volumes, say) stay separate. */
+    /* "ch. 7" + "ch. 9" → "ch. 7 & 9"; runs of three or more become "ch. 1–6";
+       mixed prefixes (two volumes, say) stay separate. */
     function joinRefs(list) {
       var groups = {}, order = [];
       list.forEach(function (r) {
         var m = r.match(/^(.*?)(\d+)$/);
         var key = m ? m[1] : r;
         if (!groups[key]) { groups[key] = []; order.push(key); }
-        if (m) groups[key].push(+m[2]);
+        if (m && groups[key].indexOf(+m[2]) === -1) groups[key].push(+m[2]);
       });
       return order.map(function (prefix) {
         var nums = groups[prefix].sort(function (a, b) { return a - b; });
         if (!nums.length) return prefix;
-        var consecutive = nums.every(function (n, i) { return i === 0 || n === nums[i - 1] + 1; });
-        if (consecutive && nums.length >= 3) return prefix + nums[0] + '–' + nums[nums.length - 1];
-        if (nums.length === 1) return prefix + nums[0];
-        return prefix + nums.slice(0, -1).join(', ') + ' & ' + nums[nums.length - 1];
+        var parts = [], i = 0;
+        while (i < nums.length) {
+          var j = i;
+          while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+          if (j - i >= 2) parts.push(nums[i] + '–' + nums[j]);
+          else for (var k = i; k <= j; k++) parts.push(String(nums[k]));
+          i = j + 1;
+        }
+        if (parts.length === 1) return prefix + parts[0];
+        return prefix + parts.slice(0, -1).join(', ') + ' & ' + parts[parts.length - 1];
       }).join('; ');
     }
-    var n = 0;
-    Object.keys(refs).forEach(function (id) {
-      if (overwrite || !b.ch[id]) { b.ch[id] = joinRefs(refs[id]); n++; }
-    });
-    return n;
+    var out = {};
+    Object.keys(refs).forEach(function (id) { out[id] = joinRefs(refs[id]); });
+    return out;
   }
   function chapterFor(topic) {
     var b = state.books[topic.subjectId];
     return (b && b.ch && b.ch[topic.id]) || '';
   }
+  /* ---- The parts of a chapter ----
+     A chapter's parts are whatever the book breaks it into: its own section
+     headings, the specification's learning outcomes, or the pieces of the
+     syllabus it covers. Each part takes a rating; ratings live with the book
+     (state.books[subject].subs) so switching books keeps them. */
+  var SUB_LABEL = ['Not rated', 'Shaky', 'Getting there', 'Solid'];
+
+  function chapterSubs(c, subjectId, entry) {
+    if (c.subs) return c.subs;
+    if (c.covers) return splitParts(c.covers);
+    /* No contents for this chapter in the catalogue: fall back to what the
+       specification lists under the topics the chapter covers. Where several
+       chapters share a topic, its points go under the first of them only. */
+    var cat = subjectId ? catalogueFor(subjectName(subjectId)) : null;
+    if (!cat) return [];
+    var out = [];
+    (c.topics || []).forEach(function (ref) {
+      if (entry && entry.chapters.filter(function (x) { return (x.topics || []).indexOf(ref) !== -1; })[0] !== c) return;
+      var bits = ref.split('.');
+      cat.strands.forEach(function (st) {
+        if (st.id !== bits[0]) return;
+        st.topics.forEach(function (t) { if (t.id === bits[1] && t.detail) out = out.concat(splitParts(t.detail)); });
+      });
+    });
+    return out;
+  }
+  /* "a; b; c" or "a · b · c" → parts; a list with only commas splits on those. */
+  function splitParts(text) {
+    var sep = /[;·]/.test(text) ? /\s*[;·]\s*/ : /\s*,\s*/;
+    return text.split(sep).map(function (x) { x = x.trim(); return x.charAt(0).toUpperCase() + x.slice(1); }).filter(Boolean);
+  }
+  function subKey(entry, c, i) { return entry.id + '|' + c.ref + '|' + i; }
+  function subConf(subjectId, key) {
+    var b = state.books[subjectId];
+    return (b && b.subs && b.subs[key]) || 0;
+  }
+  function setSubConf(subjectId, key, conf) {
+    var b = bookFor(subjectId);
+    if (!b.subs) b.subs = {};
+    if (conf) b.subs[key] = conf; else delete b.subs[key];
+  }
+  function subConfs(subjectId, entry, c) {
+    return chapterSubs(c, subjectId, entry).map(function (_, i) { return subConf(subjectId, subKey(entry, c, i)); });
+  }
+  function chapterTopicIds(subjectId, c) {
+    return (c.topics || []).map(function (t) { return subjectId + ':' + t.replace('.', ':'); });
+  }
+  /* Chapters of the student's book that cover a topic. */
+  function chaptersForTopic(topic) {
+    var entry = bookEntry(topic.subjectId);
+    if (!entry || !entry.chapters) return [];
+    return entry.chapters.filter(function (c) { return chapterTopicIds(topic.subjectId, c).indexOf(topic.id) !== -1; });
+  }
+  /* A topic's rating follows the average of the parts rated under it, across every
+     chapter of the book that covers it. Tapping the topic's circle still overrides. */
+  function rollUpSubs(subjectId, entry, c) {
+    chapterTopicIds(subjectId, c).forEach(function (topicId) {
+      var rated = [];
+      entry.chapters.forEach(function (ch) {
+        if (chapterTopicIds(subjectId, ch).indexOf(topicId) === -1) return;
+        subConfs(subjectId, entry, ch).forEach(function (v) { if (v) rated.push(v); });
+      });
+      if (!rated.length) return;
+      var p = state.topics[topicId] || { conf: 0, last: null };
+      p.conf = Math.round(rated.reduce(function (a, b) { return a + b; }, 0) / rated.length);
+      state.topics[topicId] = p;
+    });
+  }
+  /* The lowest-rated part of a topic that is not yet solid, for the planner to point at. */
+  function weakestSub(topic) {
+    var entry = bookEntry(topic.subjectId);
+    if (!entry) return null;
+    var best = null;
+    chaptersForTopic(topic).forEach(function (c) {
+      var subs = chapterSubs(c, topic.subjectId, entry);
+      subConfs(topic.subjectId, entry, c).forEach(function (v, i) {
+        if (v && v < 3 && (!best || v < best.conf)) best = { conf: v, title: subs[i], chapter: c };
+      });
+    });
+    return best;
+  }
+  /* "3/5 solid" once anything in the chapter has been rated. */
+  function subsSummary(subjectId, entry, c) {
+    var confs = subConfs(subjectId, entry, c);
+    if (!confs.some(Boolean)) return '';
+    return confs.filter(function (v) { return v === 3; }).length + '/' + confs.length + ' solid';
+  }
+  /* One row per part, each with a rating menu. `ci` is the chapter's index in the book. */
+  function subsHtml(subjectId, entry, c, ci) {
+    var subs = chapterSubs(c, subjectId, entry);
+    if (!subs.length) return '<div class="day-free">This chapter has no parts listed; rate the topic itself instead.</div>';
+    return '<div class="subs">' + subs.map(function (title, i) {
+      var key = subKey(entry, c, i), v = subConf(subjectId, key);
+      return '<label class="sub-row"><span class="t">' + esc(title) + '</span>' +
+        '<select class="sub-rate c' + v + '" data-sub="' + esc(key) + '" data-subject="' + esc(subjectId) + '" data-ci="' + ci + '" aria-label="Rate: ' + esc(title) + '">' +
+        SUB_LABEL.map(function (l, k) { return '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + l + '</option>'; }).join('') +
+        '</select></label>';
+    }).join('') + '</div>';
+  }
+
   /* What a plan block or reminder calls the topic: "Photosynthesis · Biology Plus ch. 12" */
   function topicRef(topic) {
     var ch = chapterFor(topic);
@@ -905,6 +1028,7 @@
         '<p class="hint">' + (entry.sectioned
           ? 'Chapter titles and section headings are from the book’s own contents pages. '
           : 'Chapter numbers and titles are from the current edition; the line under each is what it maps to in the syllabus above, not the book’s own section headings. ') +
+          'Open a chapter to rate its parts one by one — the topic’s circle below follows their average. ' +
           'Picking this book fills the chapter fields; Refill puts them back if you have changed any.</p>';
       (entry.volumes || ['']).forEach(function (volName, vi) {
         var chaps = entry.chapters.filter(function (c) { return (c.vol || 0) === vi; });
@@ -913,9 +1037,21 @@
         html += '<div class="chapters">' + chaps.map(function (c) {
           var mapped = (c.topics || []).map(function (t) { return byTopic[sub.id + ':' + t.replace('.', ':')]; })
             .filter(Boolean);
-          return '<div class="chap"><span class="n">' + c.n + '</span><div class="body"><div class="t">' + esc(c.title) + '</div>' +
-            (c.covers ? '<div class="meta">' + esc(c.covers) + '</div>' : '') +
+          var ci = entry.chapters.indexOf(c);
+          var subs = chapterSubs(c, sub.id, entry);
+          var openKey = entry.id + '|' + ci;
+          var open = !!ui.openChaps[openKey];
+          var sum = subsSummary(sub.id, entry, c);
+          var brief = c.covers || (c.subs && c.subs.join(' · ').length <= 240 ? c.subs.join(' · ') : '');
+          return '<div class="chap' + (open ? ' open' : '') + '"><span class="n">' + esc(String(c.n)) + '</span><div class="body"><div class="t">' + esc(c.title) + '</div>' +
+            (brief && !open ? '<div class="meta">' + esc(brief) + '</div>' : '') +
             (mapped.length ? '<div class="meta maps">→ ' + mapped.map(esc).join(' · ') + '</div>' : '') +
+            (subs.length
+              ? '<button class="link small" data-action="toggle-chap" data-id="' + esc(openKey) + '">' +
+                  (open ? 'Hide the parts' : 'Rate the ' + subs.length + ' part' + (subs.length === 1 ? '' : 's')) +
+                  (sum ? ' · ' + sum : '') + '</button>'
+              : '') +
+            (open ? subsHtml(sub.id, entry, c, ci) : '') +
             '</div></div>';
         }).join('') + '</div>';
       });
@@ -1102,6 +1238,8 @@
           used['strand:' + tp.strandId] = true;
           block.topicId = tp.id;
           block.topic = topicRef(tp);
+          var weak = weakestSub(tp);
+          if (weak) block.focus = weak.title;
         }
         plan.push(block);
         t += BLOCK + GAP;
@@ -1160,6 +1298,45 @@
     return t.running ? Math.max(0, Math.round((t.endsAt - Date.now()) / 1000)) : t.remaining;
   }
 
+  /* Study: the parts of the chosen topic's chapter(s) in the student's book, each
+     with a rating menu, so a session can end with an honest update. */
+  function renderTimerSubs() {
+    var box = $('#timerSubs');
+    if (!box) return;
+    var t = timerState();
+    var topic = t.topicId ? topicById(t.topicId) : null;
+    if (!topic || topic.custom) { box.innerHTML = ''; box.hidden = true; return; }
+    box.hidden = false;
+    var entry = bookEntry(topic.subjectId);
+    var bk = bookShort(topic.subjectId);
+    if (!entry || !entry.chapters) {
+      box.innerHTML = '<p class="hint">' + (bookTitle(topic.subjectId)
+        ? 'The chapter list for ' + esc(bk) + ' is not built in yet, so there are no parts to rate here. Rate the topic itself under Plan → Syllabus.'
+        : 'Pick your textbook under Plan → Syllabus and the parts of the matching chapter will appear here to rate.') + '</p>';
+      return;
+    }
+    var chaps = chaptersForTopic(topic);
+    if (!chaps.length) {
+      box.innerHTML = '<p class="hint">No chapter of ' + esc(bk) + ' is mapped to this topic yet.</p>';
+      return;
+    }
+    box.innerHTML = '<div class="subs-title"><span>Rate the parts of ' + (chaps.length > 1 ? 'these ' + chaps.length + ' chapters' : 'this chapter') + '</span>' +
+      '<span class="side">sets the topic’s rating</span></div>' +
+      chaps.map(function (c) {
+        var ci = entry.chapters.indexOf(c);
+        var key = entry.id + '|' + ci;
+        var open = ui.openChaps[key] !== undefined ? ui.openChaps[key] : chaps.length <= 2;
+        return '<div class="subs-chap' + (open ? ' open' : '') + '">' +
+          '<button class="subs-head" data-action="toggle-chap" data-id="' + esc(key) + '" data-open="' + (open ? 1 : 0) + '" aria-expanded="' + open + '">' +
+            '<span class="n">' + esc(String(c.n)) + '</span>' +
+            '<span class="t">' + esc(c.title) + '</span>' +
+            '<span class="side">' + esc(subsSummary(topic.subjectId, entry, c) || c.ref) + '</span>' +
+            '<span class="chev" aria-hidden="true"></span>' +
+          '</button>' +
+          (open ? subsHtml(topic.subjectId, entry, c, ci) : '') + '</div>';
+      }).join('');
+  }
+
   function renderStudy() {
     var t = timerState();
     var sel = $('#timerSubject');
@@ -1168,6 +1345,7 @@
     }).join('') || '<option value="">Add a subject in Setup</option>';
     $('#timerTopic').value = t.topic || '';
     $('#timerTopicPick').innerHTML = topicOptions(t.subjectId, t.topicId);
+    renderTimerSubs();
     $('#focusMins').value = state.profile.focusMins;
     $('#breakMins').value = state.profile.breakMins;
     $$('#timerModeSeg button').forEach(function (b) {
@@ -2283,6 +2461,10 @@
         break;
       }
       case 'add-topic': topicModal(); break;
+      case 'toggle-chap':
+        ui.openChaps[id] = el.dataset.open !== undefined ? el.dataset.open !== '1' : !ui.openChaps[id];
+        if (ui.view === 'study') renderTimerSubs(); else renderSyllabus();
+        break;
       case 'fill-chapters': {
         var refilled = applyBookChapters(ui.sylSubject, true);
         save(true); renderSyllabus();
@@ -2469,6 +2651,7 @@
       save(true);
     }
     if (e.target.id === 'sylBook') {
+      clearBookChapters(ui.sylSubject, bookEntry(ui.sylSubject));
       bookFor(ui.sylSubject).book = e.target.value;
       var filled = applyBookChapters(ui.sylSubject, false);
       save(true);
@@ -2478,6 +2661,23 @@
     if (e.target.id === 'sylBookCustom') {
       bookFor(ui.sylSubject).custom = e.target.value.trim();
       save(true);
+    }
+    var subSel = e.target.closest('select[data-sub]');
+    if (subSel) {
+      var subSubject = subSel.dataset.subject;
+      var subEntry = bookEntry(subSubject);
+      var subChap = subEntry && subEntry.chapters ? subEntry.chapters[+subSel.dataset.ci] : null;
+      if (subChap) {
+        setSubConf(subSubject, subSel.dataset.sub, +subSel.value);
+        rollUpSubs(subSubject, subEntry, subChap);
+        save(true);
+        subSel.className = 'sub-rate c' + subSel.value;
+        var wrap = subSel.closest('.subs-chap');
+        if (wrap) wrap.querySelector('.subs-head .side').textContent = subsSummary(subSubject, subEntry, subChap) || subChap.ref;
+        if (ui.view === 'plan') renderSyllabus();
+        if (ui.view === 'today') renderWeakSpots();
+      }
+      return;
     }
     var strandToggle = e.target.closest('[data-action="toggle-strand"]');
     if (strandToggle) {
@@ -2495,6 +2695,7 @@
       var chosen = tmr.topicId ? topicById(tmr.topicId) : null;
       if (chosen) { tmr.topic = chosen.title; $('#timerTopic').value = chosen.title; }
       save(true);
+      renderTimerSubs();
     }
     if (e.target.id === 'lSubject' && $('#lTopicPick')) $('#lTopicPick').innerHTML = topicOptions(e.target.value, null);
     if (e.target.id === 'sesSubject' && $('#sesTopicPick')) $('#sesTopicPick').innerHTML = topicOptions(e.target.value, null);
@@ -2547,6 +2748,7 @@
       tm.topicId = null;
       $('#timerTopicPick').innerHTML = topicOptions(tm.subjectId, null);
       save(true);
+      renderTimerSubs();
     });
     $('#timerTopic').addEventListener('input', function () { timerState().topic = this.value; save(true); });
     $('#focusMins').addEventListener('change', function () {

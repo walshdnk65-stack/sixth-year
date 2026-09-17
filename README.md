@@ -71,10 +71,17 @@ For every topic you can:
   shows a contents card. Verified so far, from the books' own contents pages or the
   publishers' chapter maps: **Text & Tests 4 and 5** and **Active Maths 4 (Books 1 & 2)**
   for Maths; **Biology Plus (2025)**; **Chemistry Live! 3rd edition** and **Real World
-  Physics 2nd edition** with their section headings; **Let's Do Business**; and **Tout va
-  bien! 4th edition** for French. The remaining titles on 2025/26 school booklists are
-  listed by name for you to map yourself, because editions differ and a wrong chapter is
-  worse than a blank;
+  Physics 2nd edition** with their section headings; **Let's Do Business** and **Back in
+  Business** (with the specification's numbered learning outcomes under each chapter);
+  and **Tout va bien! 4th edition** and **À l'Attaque ! 2nd edition** for French. The
+  remaining titles on 2025/26 school booklists are listed by name for you to map
+  yourself, because editions differ and a wrong chapter is worse than a blank;
+- **rate it part by part** — open a chapter on the contents card and every part of it
+  (the book's own section headings, the learning outcomes, or the syllabus points it
+  covers) gets a drop-down of its own. The topic's circle then follows the average, and
+  the planner names the weakest part in each block: "Start with: 14.3 Evaluate how digital
+  technologies influence recruitment". The same drop-downs sit under the topic picker on
+  the Study tab, so a session can end with an honest update;
 - **switch strands off** — options and electives your teacher is not doing come out of the
   planner with one tick;
 - **add your own** — set texts, poets, case studies, or an entire syllabus for a subject
