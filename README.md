@@ -32,6 +32,16 @@ today's classes with rooms and teachers (the current one highlighted), how far t
 sixth year you are, today's study against your daily goal, what is due in the next week,
 tonight's planned blocks, and which subjects have gone stale.
 
+**Start** — one button, no picking. Today's study card says what it will start and
+why: tonight's next block ("tonight's 19:00 block · 45 min"); failing that the best
+use of the next twenty minutes — the planner's own subject weighting, then its most
+pressing topic, with the weakest part of the chapter named; failing that, where the
+last session left off. Tap it and you are in focus mode with the clock running. When
+the session ends — the Pomodoro block completes, or you *Stop & log* — one card comes
+up: first "without looking, what can you recall?" (the recall *is* the study, and
+rating after recalling keeps the rating honest), then the parts of the chapter with
+their rating menus. *Done* saves the note to the session and drops you back on Today.
+
 **Timetable** (Plan → Timetable) — your school week. Pick a day, tap any period and set
 the subject (or type something that is not one of your subjects, like PE or study hall),
 the room and the teacher. *Edit time slots* is where the periods themselves live: rename
@@ -115,7 +125,8 @@ subject and a reminder to put the phone down — and asks the browser to keep th
 awake. Escape or *Leave focus mode* returns.
 
 **Session notes** — tap any session in the recent list to correct the subject, minutes or
-time, and to write down what you actually covered and what to redo.
+time, and to write down what you actually covered and what to redo. Every timed
+session also ends on the recall-then-rate card described under Today.
 
 **Stats** — minutes per day this week, day streak, 30-day average, hours by subject and
 homework completed, plus three exam-facing cards:
@@ -215,6 +226,14 @@ nothing to push from — which is why the scheduling above is done on the device
 Nothing leaves the device. Setup → *Export backup* writes a JSON file; *Import backup*
 restores it on another phone or browser. Clearing site data wipes everything, so export
 before you switch device.
+
+The app watches for the two ways that data gets lost. On an iPhone running in a Safari
+tab rather than from the Home Screen, Today shows a warning: Safari clears a site's
+storage after seven days without a visit, and only an installed app is exempt. And once
+there is enough in the app to miss, Today asks for a backup if there has never been one
+or the last is over a month old — a *Back up* button on the line does it. Setup shows
+the age of the last backup, whether the browser has marked the storage persistent
+(the app asks for this on every load), and whether it is running installed or in a tab.
 
 The default exam date is worked out as the Wednesday after the June bank holiday
 Monday, which is when the Leaving Cert normally starts — change it in Setup once the

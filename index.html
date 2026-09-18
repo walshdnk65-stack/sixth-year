@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon.svg">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./app.css?v=13">
+<link rel="stylesheet" href="./app.css?v=14">
 </head>
 <body>
 
@@ -40,6 +40,7 @@
   <!-- ============ TODAY ============ -->
   <section class="view" id="view-today">
     <div id="setupBanner"></div>
+    <div id="dataGuard"></div>
 
     <div class="stack">
       <div class="card hero">
@@ -70,8 +71,9 @@
           <span class="side" id="goalLabel"></span>
         </div>
         <div class="track info"><i id="goalBar" style="width:0%"></i></div>
+        <div class="start-next" id="startNext"></div>
         <div class="row" style="margin-top:14px">
-          <button class="btn primary grow" data-go="study">Start a session</button>
+          <button class="btn primary grow" id="btnQuickStart">Start</button>
           <button class="btn subtle grow" data-go="homework">Add homework</button>
         </div>
       </div>
@@ -358,6 +360,7 @@
           <button class="btn subtle grow" id="btnExport">Export backup</button>
           <button class="btn subtle grow" id="btnImport">Import backup</button>
         </div>
+        <p class="hint" id="dataStatus" style="margin:10px 0 0"></p>
         <div class="row" style="margin-top:8px">
           <button class="btn danger block" id="btnReset">Reset everything</button>
         </div>
@@ -370,6 +373,7 @@
           Install it to the home screen so reminders keep working when the app is closed.
           iPhone: Share → Add to Home Screen (iOS 16.4+). Android: menu → Install app.
         </p>
+        <p class="hint" id="installStatus"></p>
         <button class="btn primary block" id="btnInstall" hidden>Install app</button>
       </div>
     </div>
@@ -390,8 +394,8 @@
 <div class="modal-back" id="modalBack" hidden><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="./syllabus.js?v=13"></script>
-<script src="./store.js?v=13"></script>
-<script src="./app.js?v=13"></script>
+<script src="./syllabus.js?v=14"></script>
+<script src="./store.js?v=14"></script>
+<script src="./app.js?v=14"></script>
 </body>
 </html>

@@ -573,6 +573,8 @@
       ? soon.slice(0, 8).map(hwRow).join('')
       : '<div class="empty">Nothing due in the next week. Add homework from the Homework tab.</div>';
 
+    renderStartCard();
+
     /* Planned blocks for today */
     var today = new Date().getDay();
     var blocks = state.plan.filter(function (b) { return b.day === today; })
@@ -596,6 +598,148 @@
       : '<div class="empty">Every subject has had a look-in recently. Nice work.</div>';
 
     renderSetupBanner();
+    renderDataGuard();
+  }
+
+  /* ---------------- Start: one button, no picking ----------------
+     What a tap on Today's Start will do, in order of preference: tonight's next
+     block; failing that the best use of the next twenty minutes (the planner's
+     own weighting, then its most pressing topic); failing that where the last
+     session left off. */
+  function startTarget() {
+    if (!state.subjects.length) return null;
+    var now = new Date();
+    var nowM = now.getHours() * 60 + now.getMinutes();
+    var todayKey = ymd(now);
+    var doneToday = {};
+    state.sessions.forEach(function (s) { if (s.topicId && ymd(new Date(s.at)) === todayKey) doneToday[s.topicId] = true; });
+
+    var block = state.plan.filter(function (b) { return b.day === now.getDay(); })
+      .sort(function (a, b) { return minsFrom(a.start) - minsFrom(b.start); })
+      .filter(function (b) { return minsFrom(b.start) + b.mins > nowM - 15 && !(b.topicId && doneToday[b.topicId]); })[0];
+    if (block && subject(block.subjectId)) {
+      var btp = block.topicId ? topicById(block.topicId) : null;
+      return {
+        subjectId: block.subjectId, topicId: btp ? btp.id : null, topic: btp ? btp.title : (block.topic || ''),
+        label: btp ? topicRef(btp) : (block.topic || ''),
+        why: (minsFrom(block.start) <= nowM ? 'tonight’s ' : 'next up, the ') + block.start + ' block · ' + dur(block.mins),
+        focus: btp ? weakestSub(btp) : null
+      };
+    }
+
+    var ranked = subjectWeights(now).sort(function (a, b) { return b.w - a.w; });
+    for (var i = 0; i < ranked.length; i++) {
+      var tp = pickTopic(ranked[i].s, {}, now);
+      if (tp) {
+        return {
+          subjectId: tp.subjectId, topicId: tp.id, topic: tp.title, label: topicRef(tp),
+          why: 'the best use of the next twenty minutes', focus: weakestSub(tp)
+        };
+      }
+    }
+
+    var last = state.sessions.length ? state.sessions[state.sessions.length - 1] : null;
+    if (last && subject(last.subjectId)) {
+      var ltp = last.topicId ? topicById(last.topicId) : null;
+      return {
+        subjectId: last.subjectId, topicId: ltp ? ltp.id : null, topic: ltp ? ltp.title : (last.topic || ''),
+        label: ltp ? topicRef(ltp) : (last.topic || ''), why: 'where you left off', focus: null
+      };
+    }
+    return { subjectId: ranked[0].s.id, topicId: null, topic: '', label: '', why: 'your most pressing subject', focus: null };
+  }
+
+  function renderStartCard() {
+    var el = $('#startNext'), btn = $('#btnQuickStart');
+    if (!el || !btn) return;
+    var t = timerState();
+    if (t.running) {
+      el.innerHTML = '<span class="t">' + esc(subjectName(t.subjectId)) + (t.topic ? ' · ' + esc(t.topic) : '') + '</span>' +
+        '<span class="meta">a session is running</span>';
+      btn.textContent = 'Back to it';
+      return;
+    }
+    var target = startTarget();
+    btn.textContent = 'Start';
+    if (!target) { el.innerHTML = ''; return; }
+    el.innerHTML = '<span class="t">' + esc(subjectName(target.subjectId)) + (target.label ? ' · ' + esc(target.label) : '') + '</span>' +
+      '<span class="meta">' + esc(target.why) + (target.focus ? ' · start with: ' + esc(target.focus.title) : '') + '</span>';
+  }
+
+  /* Start from Today: load the target into the timer and go straight into focus mode. */
+  function quickStart() {
+    var t = timerState();
+    if (t.running) { go('study'); focusMode(true); return; }
+    var target = startTarget();
+    if (!target) { go('study'); return; }
+    t.subjectId = target.subjectId;
+    t.topicId = target.topicId;
+    t.topic = target.topic || '';
+    if (t.kind !== 'stopwatch') {
+      t.mode = 'focus';
+      t.remaining = (state.profile.focusMins || 25) * 60;
+      t.startedAt = 0;
+    }
+    t.quick = true;
+    save(true);
+    go('study');
+    focusMode(true);
+    startTimer();
+  }
+
+  /* ---------------- Keeping the data safe ----------------
+     Everything lives in this browser's storage. Safari clears a site's storage
+     after seven days without a visit unless the app is on the Home Screen, and
+     a phone can be lost any day, so Today says so when either risk is live. */
+  function isIOS() {
+    return /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  }
+  /* Is there enough in here to be worth a backup? */
+  function worthBackingUp() {
+    return state.sessions.length + state.homework.length + Object.keys(state.topics).length >= 15;
+  }
+  function backupAgeDays() {
+    return state.profile.lastBackup ? daysBetween(new Date(state.profile.lastBackup), new Date()) : null;
+  }
+  function renderDataGuard() {
+    var el = $('#dataGuard');
+    if (!el) return;
+    var age = backupAgeDays();
+    if (isIOS() && !isStandalone()) {
+      el.innerHTML = '<div class="banner warn"><span>Safari clears this app’s data after 7 days without a visit. ' +
+        'Add it to your Home Screen (Share → Add to Home Screen) and it is kept.</span>' +
+        '<button class="btn small subtle" data-action="backup-now">Back up</button></div>';
+    } else if (worthBackingUp() && (age === null || age >= 30)) {
+      el.innerHTML = '<div class="banner"><span>' + (age === null ? 'No backup yet' : 'Last backup ' + age + ' days ago') +
+        ' — a lost phone takes the year’s ratings with it.</span>' +
+        '<button class="btn small primary" data-action="backup-now">Back up</button></div>';
+    } else {
+      el.innerHTML = '';
+    }
+  }
+  function renderDataStatus() {
+    var st = $('#dataStatus'), inst = $('#installStatus');
+    if (st) {
+      var age = backupAgeDays();
+      var base = age === null ? 'No backup exported yet.' : 'Last backup: ' + (age === 0 ? 'today' : age === 1 ? 'yesterday' : age + ' days ago') + '.';
+      st.textContent = base;
+      if (navigator.storage && navigator.storage.persisted) {
+        navigator.storage.persisted().then(function (yes) {
+          st.textContent = base + (yes ? ' Storage is marked persistent, so the browser will not clear it to free space.'
+            : ' Storage is best-effort: the browser may clear it if space runs low, so keep a backup.');
+        }).catch(function () {});
+      }
+    }
+    if (inst) {
+      inst.textContent = isStandalone()
+        ? 'Installed — running from the Home Screen, so the data is kept.'
+        : isIOS() ? 'Running in Safari: data is cleared after 7 days without a visit. Add to Home Screen to keep it.'
+        : 'Running in the browser tab.';
+    }
   }
 
   function countSchoolDays(from, to) {
@@ -1194,18 +1338,11 @@
     }).join('');
   }
 
-  function autoPlan() {
-    if (!state.subjects.length) { toast('Add your subjects first'); return; }
-    var startM = minsFrom(state.profile.studyStart || '17:00');
-    var endM = minsFrom(state.profile.studyEnd || '21:30');
-    var goal = state.profile.dailyGoal || 120;
-    var BLOCK = 45, GAP = 15;
-
-    /* Weight each subject: its own priority, how long since it was studied,
-       and whether homework is due for it in the next week. */
-    var now = new Date();
+  /* Weight each subject: its own priority, how long since it was studied,
+     and whether homework is due for it in the next week. */
+  function subjectWeights(now) {
     var soonCut = addDays(now, 7).getTime();
-    var weights = state.subjects.map(function (s) {
+    return state.subjects.map(function (s) {
       var last = lastStudied(s.id);
       var neglect = last === null ? 14 : Math.min(14, daysBetween(new Date(last), now));
       var hwDue = state.homework.some(function (h) {
@@ -1213,6 +1350,17 @@
       });
       return { s: s, w: (s.priority || 2) * (1 + neglect / 14) * (hwDue ? 1.4 : 1), count: 0 };
     });
+  }
+
+  function autoPlan() {
+    if (!state.subjects.length) { toast('Add your subjects first'); return; }
+    var startM = minsFrom(state.profile.studyStart || '17:00');
+    var endM = minsFrom(state.profile.studyEnd || '21:30');
+    var goal = state.profile.dailyGoal || 120;
+    var BLOCK = 45, GAP = 15;
+
+    var now = new Date();
+    var weights = subjectWeights(now);
 
     var plan = [];
     var used = {};                                   // topics and strands already placed this week
@@ -1307,20 +1455,21 @@
     var topic = t.topicId ? topicById(t.topicId) : null;
     if (!topic || topic.custom) { box.innerHTML = ''; box.hidden = true; return; }
     box.hidden = false;
+    box.dataset.topic = topic.id;
+    box.innerHTML = subsListHtml(topic);
+  }
+  function subsListHtml(topic) {
+    if (topic.custom) return '';
     var entry = bookEntry(topic.subjectId);
     var bk = bookShort(topic.subjectId);
     if (!entry || !entry.chapters) {
-      box.innerHTML = '<p class="hint">' + (bookTitle(topic.subjectId)
+      return '<p class="hint">' + (bookTitle(topic.subjectId)
         ? 'The chapter list for ' + esc(bk) + ' is not built in yet, so there are no parts to rate here. Rate the topic itself under Plan → Syllabus.'
         : 'Pick your textbook under Plan → Syllabus and the parts of the matching chapter will appear here to rate.') + '</p>';
-      return;
     }
     var chaps = chaptersForTopic(topic);
-    if (!chaps.length) {
-      box.innerHTML = '<p class="hint">No chapter of ' + esc(bk) + ' is mapped to this topic yet.</p>';
-      return;
-    }
-    box.innerHTML = '<div class="subs-title"><span>Rate the parts of ' + (chaps.length > 1 ? 'these ' + chaps.length + ' chapters' : 'this chapter') + '</span>' +
+    if (!chaps.length) return '<p class="hint">No chapter of ' + esc(bk) + ' is mapped to this topic yet.</p>';
+    return '<div class="subs-title"><span>Rate the parts of ' + (chaps.length > 1 ? 'these ' + chaps.length + ' chapters' : 'this chapter') + '</span>' +
       '<span class="side">sets the topic’s rating</span></div>' +
       chaps.map(function (c) {
         var ci = entry.chapters.indexOf(c);
@@ -1436,7 +1585,7 @@
 
   function resetTimer(keepMode) {
     var t = timerState();
-    if (t.mode === 'focus' && t.running) logElapsed();
+    var ses = t.mode === 'focus' && t.running ? logElapsed() : null;
     t.running = false;
     if (!keepMode) t.mode = 'focus';
     t.remaining = (t.mode === 'focus' ? state.profile.focusMins : state.profile.breakMins) * 60;
@@ -1444,6 +1593,7 @@
     stopTicker();
     save(true);
     paintTimer();
+    if (ses) wrapUp(ses);
   }
 
   /* Stopwatch: bank whatever has run, then go back to zero. */
@@ -1454,28 +1604,70 @@
     t.swStart = 0;
     t.swAccum = 0;
     stopTicker();
+    var ses = null;
     if (mins >= 1) {
-      logSession(t.subjectId, t.topic, mins, t.topicId);
+      ses = logSession(t.subjectId, t.topic, mins, t.topicId);
       toast(dur(mins) + ' logged to ' + subjectName(t.subjectId));
     } else {
       save(true);
       toast('Under a minute — nothing logged');
     }
     if (ui.view === 'study') renderStudy(); else paintTimer();
+    if (ses) wrapUp(ses);
   }
 
   function logElapsed() {
     var t = timerState();
     var total = state.profile.focusMins * 60;
     var elapsed = Math.round((total - timerRemaining()) / 60);
-    if (elapsed >= 1) logSession(t.subjectId, t.topic, elapsed, t.topicId);
+    return elapsed >= 1 ? logSession(t.subjectId, t.topic, elapsed, t.topicId) : null;
   }
 
   function logSession(subjectId, topic, mins, topicId) {
     var at = new Date().toISOString();
-    state.sessions.push({ id: uid(), subjectId: subjectId, topic: topic || '', mins: mins, at: at, topicId: topicId || null });
+    var ses = { id: uid(), subjectId: subjectId, topic: topic || '', mins: mins, at: at, topicId: topicId || null };
+    state.sessions.push(ses);
     markStudied(topicId, at);
     save();
+    return ses;
+  }
+
+  /* ---------------- Wrap-up: recall first, then rate ----------------
+     Every timed session ends on one card: a recall prompt (retrieval is the
+     study, and rating after recalling keeps the rating honest), then the parts
+     of the topic's chapter with their rating menus. Done goes back to Today if
+     the session was launched from there. */
+  function wrapUp(ses) {
+    if (!ses || ses.mins < 1) return;
+    var topic = ses.topicId ? topicById(ses.topicId) : null;
+    var body = '<p class="hint">' + dur(ses.mins) + ' of ' + esc(subjectName(ses.subjectId)) + (topic ? ' on ' + esc(topic.title) : '') + ' logged.</p>' +
+      '<label class="field"><span>Before you rate: without looking, what can you recall?</span>' +
+      '<textarea id="wrapNote" placeholder="Three things from the last ' + dur(ses.mins) + ' — a definition, a step, a formula, a date…"></textarea></label>' +
+      (topic
+        ? '<div class="subs-wrap" data-topic="' + esc(topic.id) + '">' + subsListHtml(topic) + '</div>'
+        : '<p class="hint">Pick a syllabus topic before the next session and the parts of its chapter will be here to rate.</p>');
+    openModal('Session done', body,
+      '<button class="btn primary" data-action="wrap-done" data-id="' + ses.id + '">Done</button>');
+  }
+  function finishWrapUp() {
+    var ta = $('#wrapNote');
+    var btn = $('[data-action="wrap-done"]');
+    if (btn) {
+      var ses = state.sessions.filter(function (x) { return x.id === btn.dataset.id; })[0];
+      var note = ta ? ta.value.trim() : '';
+      if (ses && note) ses.note = note;
+      save(true);
+    }
+    closeModal();
+    var t = timerState();
+    if (t.quick) {
+      t.quick = false;
+      save(true);
+      focusMode(false);
+      go('today');
+    } else if (ui.view === 'study') {
+      renderStudy();
+    }
   }
 
   function runTicker() {
@@ -1501,8 +1693,9 @@
     var t = timerState();
     t.running = false;
     stopTicker();
+    var ses = null;
     if (t.mode === 'focus') {
-      logSession(t.subjectId, t.topic, state.profile.focusMins, t.topicId);
+      ses = logSession(t.subjectId, t.topic, state.profile.focusMins, t.topicId);
       t.mode = 'break';
       t.remaining = state.profile.breakMins * 60;
       if (state.notify.timer) notifyNow('Focus block done', dur(state.profile.focusMins) + ' of ' + subjectName(t.subjectId) + ' logged. Take a ' + state.profile.breakMins + ' minute break.', 'study');
@@ -1516,6 +1709,7 @@
     t.startedAt = 0;
     save();
     if (ui.view === 'study') renderStudy(); else paintTimer();
+    if (ses) wrapUp(ses);
   }
 
   function beep() {
@@ -1753,6 +1947,7 @@
 
   function renderSetup() {
     var p = state.profile, n = state.notify;
+    renderDataStatus();
     $('#setName').value = p.name;
     $('#setExam').value = p.examDate;
     $('#setGoal').value = p.dailyGoal;
@@ -2270,6 +2465,10 @@
    * ------------------------------------------------------------------ */
 
   function exportData() {
+    state.profile.lastBackup = new Date().toISOString();
+    save(true);
+    if (ui.view === 'today') renderDataGuard();
+    if (ui.view === 'setup') renderDataStatus();
     var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -2337,7 +2536,7 @@
 
     var el = e.target.closest('[data-action]');
     if (!el) {
-      if (e.target.id === 'modalBack') closeModal();
+      if (e.target.id === 'modalBack') { if ($('#wrapNote')) finishWrapUp(); else closeModal(); }
       return;
     }
     var id = el.dataset.id;
@@ -2461,10 +2660,18 @@
         break;
       }
       case 'add-topic': topicModal(); break;
-      case 'toggle-chap':
+      case 'toggle-chap': {
         ui.openChaps[id] = el.dataset.open !== undefined ? el.dataset.open !== '1' : !ui.openChaps[id];
-        if (ui.view === 'study') renderTimerSubs(); else renderSyllabus();
+        var wrapList = el.closest('#modal .subs-wrap');
+        if (wrapList) {
+          var wrapTopic = topicById(wrapList.dataset.topic);
+          if (wrapTopic) wrapList.innerHTML = subsListHtml(wrapTopic);
+        } else if (ui.view === 'study') renderTimerSubs();
+        else renderSyllabus();
         break;
+      }
+      case 'wrap-done': finishWrapUp(); break;
+      case 'backup-now': exportData(); break;
       case 'fill-chapters': {
         var refilled = applyBookChapters(ui.sylSubject, true);
         save(true); renderSyllabus();
@@ -2727,6 +2934,7 @@
       paintTimer();
     });
     $('#btnFocus').addEventListener('click', function () { focusMode(true); });
+    $('#btnQuickStart').addEventListener('click', quickStart);
     $('#btnFocusExit').addEventListener('click', function () { focusMode(false); });
     $('#pointsSrc').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-psrc]');
@@ -2841,6 +3049,12 @@
     wire();
     go((location.hash || '#today').slice(1));
     if (timerState().running) runTicker(); else paintTimer();
+
+    /* Ask the browser not to evict this origin's storage when space runs low.
+       Installed apps usually get it without asking; a tab may not. */
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(function () {});
+    }
 
     initServiceWorker().then(rebuildReminders);
 
