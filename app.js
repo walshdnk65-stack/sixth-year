@@ -620,7 +620,7 @@
     if (block && subject(block.subjectId)) {
       var btp = block.topicId ? topicById(block.topicId) : null;
       return {
-        subjectId: block.subjectId, topicId: btp ? btp.id : null, topic: btp ? btp.title : (block.topic || ''),
+        subjectId: block.subjectId, topicId: btp ? btp.id : null, topic: btp ? '' : (block.topic || ''),
         label: btp ? topicRef(btp) : (block.topic || ''),
         why: (minsFrom(block.start) <= nowM ? 'tonight’s ' : 'next up, the ') + block.start + ' block · ' + dur(block.mins),
         focus: btp ? weakestSub(btp) : null
@@ -642,7 +642,7 @@
     if (last && subject(last.subjectId)) {
       var ltp = last.topicId ? topicById(last.topicId) : null;
       return {
-        subjectId: last.subjectId, topicId: ltp ? ltp.id : null, topic: ltp ? ltp.title : (last.topic || ''),
+        subjectId: last.subjectId, topicId: ltp ? ltp.id : null, topic: ltp ? '' : (last.topic || ''),
         label: ltp ? topicRef(ltp) : (last.topic || ''), why: 'where you left off', focus: null
       };
     }
@@ -654,7 +654,7 @@
     if (!el || !btn) return;
     var t = timerState();
     if (t.running) {
-      el.innerHTML = '<span class="t">' + esc(subjectName(t.subjectId)) + (t.topic ? ' · ' + esc(t.topic) : '') + '</span>' +
+      el.innerHTML = '<span class="t">' + esc(subjectName(t.subjectId)) + (timerLabel(t) ? ' · ' + esc(timerLabel(t)) : '') + '</span>' +
         '<span class="meta">a session is running</span>';
       btn.textContent = 'Back to it';
       return;
@@ -1418,7 +1418,20 @@
     if (t.topicId === undefined) t.topicId = null;
     if (typeof t.swAccum !== 'number') t.swAccum = 0;
     if (typeof t.swStart !== 'number') t.swStart = 0;
+    /* Older versions copied the picked topic's title into the free-text box. */
+    if (t.topicId && t.topic) {
+      var picked = topicById(t.topicId);
+      if (picked && picked.title === t.topic) t.topic = '';
+    }
     return t;
+  }
+
+  /* What a session is called: the syllabus topic, then anything typed in
+     "Or describe it" after it — or just the typed text when no topic is picked. */
+  function timerLabel(t) {
+    var tp = t.topicId ? topicById(t.topicId) : null;
+    if (!tp) return t.topic || '';
+    return tp.title + (t.topic ? ' · ' + t.topic : '');
   }
 
   /* Seconds on the stopwatch, counting the stretch since it was last started. */
@@ -1606,7 +1619,7 @@
     stopTicker();
     var ses = null;
     if (mins >= 1) {
-      ses = logSession(t.subjectId, t.topic, mins, t.topicId);
+      ses = logSession(t.subjectId, timerLabel(t), mins, t.topicId);
       toast(dur(mins) + ' logged to ' + subjectName(t.subjectId));
     } else {
       save(true);
@@ -1620,7 +1633,7 @@
     var t = timerState();
     var total = state.profile.focusMins * 60;
     var elapsed = Math.round((total - timerRemaining()) / 60);
-    return elapsed >= 1 ? logSession(t.subjectId, t.topic, elapsed, t.topicId) : null;
+    return elapsed >= 1 ? logSession(t.subjectId, timerLabel(t), elapsed, t.topicId) : null;
   }
 
   function logSession(subjectId, topic, mins, topicId) {
@@ -1695,7 +1708,7 @@
     stopTicker();
     var ses = null;
     if (t.mode === 'focus') {
-      ses = logSession(t.subjectId, t.topic, state.profile.focusMins, t.topicId);
+      ses = logSession(t.subjectId, timerLabel(t), state.profile.focusMins, t.topicId);
       t.mode = 'break';
       t.remaining = state.profile.breakMins * 60;
       if (state.notify.timer) notifyNow('Focus block done', dur(state.profile.focusMins) + ' of ' + subjectName(t.subjectId) + ' logged. Take a ' + state.profile.breakMins + ' minute break.', 'study');
@@ -1743,7 +1756,7 @@
   function renderFocusSubject() {
     var t = timerState();
     var el = $('#focusSubject');
-    if (el) el.textContent = subjectName(t.subjectId) + (t.topic ? ' · ' + t.topic : '');
+    if (el) el.textContent = subjectName(t.subjectId) + (timerLabel(t) ? ' · ' + timerLabel(t) : '');
   }
 
   /* Keep the screen awake while a focus block runs, where the browser allows it. */
@@ -2700,7 +2713,7 @@
           if (tm.running) pauseTimer();
           tm.subjectId = target.subjectId;
           tm.topicId = target.id;
-          tm.topic = target.title;
+          tm.topic = '';
           save(true);
         }
         go('study');
@@ -2899,8 +2912,8 @@
     if (e.target.id === 'timerTopicPick') {
       var tmr = timerState();
       tmr.topicId = e.target.value || null;
-      var chosen = tmr.topicId ? topicById(tmr.topicId) : null;
-      if (chosen) { tmr.topic = chosen.title; $('#timerTopic').value = chosen.title; }
+      tmr.topic = '';
+      $('#timerTopic').value = '';
       save(true);
       renderTimerSubs();
     }
@@ -2954,6 +2967,8 @@
       var tm = timerState();
       tm.subjectId = this.value;
       tm.topicId = null;
+      tm.topic = '';
+      $('#timerTopic').value = '';
       $('#timerTopicPick').innerHTML = topicOptions(tm.subjectId, null);
       save(true);
       renderTimerSubs();
