@@ -1,9 +1,9 @@
 /* Service worker: offline shell + reminders that fire when the app is closed. */
-importScripts('./store.js?v=15');
+importScripts('./store.js?v=16');
 
-var CACHE = 'sixth-year-v15';
+var CACHE = 'sixth-year-v16';
 var SHELL = [
-  './', './index.html', './app.css?v=15', './app.js?v=15', './store.js?v=15', './syllabus.js?v=15',
+  './', './index.html', './app.css?v=16', './app.js?v=16', './store.js?v=16', './syllabus.js?v=16',
   './manifest.webmanifest', './icon.svg', './icon-maskable.svg', './badge.svg'
 ];
 
@@ -25,8 +25,11 @@ self.addEventListener('fetch', function (e) {
   e.respondWith(
     caches.match(req).then(function (hit) {
       return hit || fetch(req).then(function (res) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        /* Keep only good responses, so a 404 or a server error is not served from the cache for ever after. */
+        if (res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        }
         return res;
       }).catch(function () { return caches.match('./index.html'); });
     })

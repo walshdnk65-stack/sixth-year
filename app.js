@@ -238,11 +238,19 @@
       .sort(function (a, b) { return new Date(a.due) - new Date(b.due); });
   }
 
-  function minutesOn(dayDate) {
-    var key = ymd(dayDate);
-    return state.sessions.reduce(function (sum, s) {
-      return sum + (ymd(new Date(s.at)) === key ? s.mins : 0);
-    }, 0);
+  /* Minutes studied per calendar day, keyed "2026-03-14", in one pass over the
+     sessions. Anything that asks about several days builds this once. */
+  function minutesByDay() {
+    var map = {};
+    state.sessions.forEach(function (s) {
+      var k = ymd(new Date(s.at));
+      map[k] = (map[k] || 0) + s.mins;
+    });
+    return map;
+  }
+
+  function minutesOn(dayDate, byDay) {
+    return (byDay || minutesByDay())[ymd(dayDate)] || 0;
   }
 
   function minutesSince(days) {
@@ -251,20 +259,21 @@
   }
 
   function streak() {
+    var byDay = minutesByDay();
     var n = 0, d = new Date();
-    if (minutesOn(d) === 0) d = addDays(d, -1);          // today still has time left to count
-    while (minutesOn(d) > 0 && n < 400) { n++; d = addDays(d, -1); }
+    if (minutesOn(d, byDay) === 0) d = addDays(d, -1);          // today still has time left to count
+    while (minutesOn(d, byDay) > 0 && n < 400) { n++; d = addDays(d, -1); }
     return n;
   }
 
-  function lastStudied(subjectId) {
-    var last = null;
+  /* subjectId → when it was last studied (ms), for every subject at once. */
+  function lastStudiedMap() {
+    var map = {};
     state.sessions.forEach(function (s) {
-      if (s.subjectId !== subjectId) return;
       var t = new Date(s.at).getTime();
-      if (last === null || t > last) last = t;
+      if (map[s.subjectId] === undefined || t > map[s.subjectId]) map[s.subjectId] = t;
     });
-    return last;
+    return map;
   }
 
   /* ------------------------------------------------------------------ *
@@ -584,9 +593,10 @@
       : '<div class="empty">No blocks planned for today. Try Auto-fill week on the Plan tab.</div>';
 
     /* Subjects going stale */
+    var lastMap = lastStudiedMap();
     var stale = state.subjects.map(function (s) {
-      var last = lastStudied(s.id);
-      return { s: s, days: last === null ? 999 : daysBetween(new Date(last), new Date()) };
+      var last = lastMap[s.id];
+      return { s: s, days: last === undefined ? 999 : daysBetween(new Date(last), new Date()) };
     }).filter(function (x) { return x.days >= 5; })
       .sort(function (a, b) { return b.days - a.days; }).slice(0, 4);
     $('#neglected').innerHTML = stale.length
@@ -654,7 +664,8 @@
     if (!el || !btn) return;
     var t = timerState();
     if (t.running) {
-      el.innerHTML = '<span class="t">' + esc(subjectName(t.subjectId)) + (timerLabel(t) ? ' · ' + esc(timerLabel(t)) : '') + '</span>' +
+      var label = timerLabel(t);
+      el.innerHTML = '<span class="t">' + esc(subjectName(t.subjectId)) + (label ? ' · ' + esc(label) : '') + '</span>' +
         '<span class="meta">a session is running</span>';
       btn.textContent = 'Back to it';
       return;
@@ -848,9 +859,20 @@
     state.subjects.forEach(function (sub) { out = out.concat(topicsFor(sub)); });
     return out;
   }
+  /* Catalogue ids start with their subject's id ("subject:strand:topic"), so only
+     that subject's list is built; the student's own topics ("c_…") are looked for
+     in the subject whose custom list holds them. The timer asks this every tick. */
   function topicById(id) {
-    var all = allTopics();
-    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    if (!id) return null;
+    var cut = id.indexOf(':');
+    var subs = cut !== -1 ? [subject(id.slice(0, cut))] : state.subjects.filter(function (sub) {
+      return (state.customTopics[sub.id] || []).some(function (t) { return t.id === id; });
+    });
+    for (var i = 0; i < subs.length; i++) {
+      if (!subs[i]) continue;
+      var list = topicsFor(subs[i]);
+      for (var j = 0; j < list.length; j++) if (list[j].id === id) return list[j];
+    }
     return null;
   }
   function topicProgress(id) { return state.topics[id] || { conf: 0, last: null }; }
@@ -1320,9 +1342,13 @@
     $('#planSyllabus').hidden = ui.planTab !== 'syllabus';
     $('#hdrTitle').textContent = ui.planTab === 'timetable' ? 'Timetable'
       : (ui.planTab === 'syllabus' ? 'Syllabus' : 'Study plan');
-    renderTimetable();
+    /* Only the sub-tab on screen is drawn; switching tabs comes back through here. */
+    if (ui.planTab === 'timetable') renderTimetable();
     if (ui.planTab === 'syllabus') renderSyllabus();
+    if (ui.planTab === 'study') renderStudyPlan();
+  }
 
+  function renderStudyPlan() {
     var total = state.plan.reduce(function (a, b) { return a + b.mins; }, 0);
     $('#planTotal').textContent = total ? dur(total) + ' a week' : '';
     var today = new Date().getDay();
@@ -1342,9 +1368,10 @@
      and whether homework is due for it in the next week. */
   function subjectWeights(now) {
     var soonCut = addDays(now, 7).getTime();
+    var lastMap = lastStudiedMap();
     return state.subjects.map(function (s) {
-      var last = lastStudied(s.id);
-      var neglect = last === null ? 14 : Math.min(14, daysBetween(new Date(last), now));
+      var last = lastMap[s.id];
+      var neglect = last === undefined ? 14 : Math.min(14, daysBetween(new Date(last), now));
       var hwDue = state.homework.some(function (h) {
         return !h.done && h.subjectId === s.id && new Date(h.due).getTime() < soonCut;
       });
@@ -1756,7 +1783,8 @@
   function renderFocusSubject() {
     var t = timerState();
     var el = $('#focusSubject');
-    if (el) el.textContent = subjectName(t.subjectId) + (timerLabel(t) ? ' · ' + timerLabel(t) : '');
+    var label = timerLabel(t);
+    if (el) el.textContent = subjectName(t.subjectId) + (label ? ' · ' + label : '');
   }
 
   /* Keep the screen awake while a focus block runs, where the browser allows it. */
@@ -1779,10 +1807,11 @@
     /* Current week, Monday to Sunday */
     var now = new Date();
     var monday = startOfDay(addDays(now, -((now.getDay() + 6) % 7)));
+    var byDay = minutesByDay();
     var vals = [], labels = [];
     for (var i = 0; i < 7; i++) {
       var d = addDays(monday, i);
-      vals.push(minutesOn(d));
+      vals.push(minutesOn(d, byDay));
       labels.push(DAY_SHORT[d.getDay()][0]);
     }
     var max = Math.max(60, Math.max.apply(null, vals));
@@ -2399,6 +2428,7 @@
     }
 
     if (n.weekly) {
+      var byDay = minutesByDay();
       for (var w = 0; w < 14; w++) {
         var sd = addDays(new Date(), w);
         if (sd.getDay() !== 0) continue;
@@ -2406,7 +2436,7 @@
         var left = Math.ceil((exam - startOfDay(sd)) / 864e5);
         if (left <= 0) continue;
         var mins = 0;
-        for (var i2 = 0; i2 < 7; i2++) mins += minutesOn(addDays(sd, -i2));
+        for (var i2 = 0; i2 < 7; i2++) mins += minutesOn(addDays(sd, -i2), byDay);
         push('week:' + ymd(sd), atTime(sd, '19:00').getTime(),
           Math.floor(left / 7) + ' weeks to the Leaving Cert',
           'You did ' + dur(mins) + ' of study this week. Set up the week ahead.', 'plan');
@@ -2416,13 +2446,21 @@
     return out.sort(function (a, b) { return a.at - b.at; });
   }
 
+  /* Most saves (a rating, a note, a result) change no reminder at all, so the
+     queue and the scheduled notifications are only rewritten when the list, the
+     permission or the service worker is different from last time. */
+  var lastReminderSig = null;
+
   function rebuildReminders() {
     if (!window.ReminderQueue || !window.indexedDB) return Promise.resolve();
     var items = buildReminders();
+    var sig = JSON.stringify(items) + '|' + (('Notification' in window) ? Notification.permission : '') + '|' + !!swReg;
+    if (sig === lastReminderSig) return fireDueReminders();
+    lastReminderSig = sig;
     return ReminderQueue.sync(items)
       .then(scheduleTriggers)
       .then(fireDueReminders)
-      .catch(function () {});
+      .catch(function () { lastReminderSig = null; });
   }
 
   /* Chrome supports notifications scheduled ahead of time; use it where present
@@ -2465,12 +2503,6 @@
     };
     if (swReg) swReg.showNotification(r.title, opts);
     else try { new Notification(r.title, opts); } catch (e) { /* ignore */ }
-  }
-
-  function pokeServiceWorker() {
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'check-reminders' });
-    }
   }
 
   /* ------------------------------------------------------------------ *
@@ -2922,6 +2954,14 @@
     if (e.target.id === 'bSubject' && $('#bTopicPick')) $('#bTopicPick').innerHTML = topicOptions(e.target.value, null);
   });
 
+  var typingSave = null;
+  function flushTyping() {
+    if (!typingSave) return;
+    clearTimeout(typingSave);
+    typingSave = null;
+    save(true);
+  }
+
   function wire() {
     $('#btnTheme').addEventListener('click', toggleTheme);
     $('#btnBell').addEventListener('click', askPermission);
@@ -2973,7 +3013,13 @@
       save(true);
       renderTimerSubs();
     });
-    $('#timerTopic').addEventListener('input', function () { timerState().topic = this.value; save(true); });
+    /* Writing all of the app's data on every keystroke made typing lag on a phone;
+       save once the typing pauses (and on leaving the page, below). */
+    $('#timerTopic').addEventListener('input', function () {
+      timerState().topic = this.value;
+      clearTimeout(typingSave);
+      typingSave = setTimeout(flushTyping, 500);
+    });
     $('#focusMins').addEventListener('change', function () {
       state.profile.focusMins = Math.max(5, Math.min(120, +this.value || 25));
       if (!timerState().running && timerState().mode === 'focus') timerState().remaining = state.profile.focusMins * 60;
@@ -3036,7 +3082,9 @@
       else if (document.body.classList.contains('focus-on')) focusMode(false);
     });
 
+    window.addEventListener('pagehide', flushTyping);
     document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flushTyping();
       if (document.visibilityState === 'visible') {
         fireDueReminders();
         render();
@@ -3073,12 +3121,10 @@
 
     initServiceWorker().then(rebuildReminders);
 
-    /* Foreground safety net: check reminders every half minute, and nudge the
-       worker so it can fire them too. */
-    setInterval(function () {
-      fireDueReminders();
-      pokeServiceWorker();
-    }, 30000);
+    /* Foreground safety net: check reminders every half minute. The page does it
+       alone — asking the worker to check the same queue as well only risked the
+       same reminder firing twice. The worker still covers the app being closed. */
+    setInterval(fireDueReminders, 30000);
 
     /* Keep the header and the now/next bar honest as periods tick over. */
     setInterval(function () {

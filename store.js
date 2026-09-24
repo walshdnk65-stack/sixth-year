@@ -8,8 +8,14 @@
   var DB_VERSION = 1;
   var STORE = 'reminders';
 
+  /* One connection, opened on first use and kept, rather than one per read or
+     write. If the browser closes it (storage cleared, a newer version opening)
+     the next call opens a fresh one. */
+  var dbPromise = null;
+
   function openDb() {
-    return new Promise(function (resolve, reject) {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
       var req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = function () {
         var db = req.result;
@@ -17,19 +23,36 @@
           db.createObjectStore(STORE, { keyPath: 'key' });
         }
       };
-      req.onsuccess = function () { resolve(req.result); };
-      req.onerror = function () { reject(req.error); };
+      req.onsuccess = function () {
+        var db = req.result;
+        db.onversionchange = function () { db.close(); dbPromise = null; };
+        db.onclose = function () { dbPromise = null; };
+        resolve(db);
+      };
+      req.onerror = function () { dbPromise = null; reject(req.error); };
+    });
+    return dbPromise;
+  }
+
+  function run(db, mode, fn) {
+    var t = db.transaction(STORE, mode);     // throws if the connection has closed
+    var req = fn(t.objectStore(STORE));
+    return new Promise(function (resolve, reject) {
+      t.oncomplete = function () { resolve(req && typeof req === 'object' && 'result' in req ? req.result : undefined); };
+      t.onerror = function () { reject(t.error); };
+      t.onabort = function () { reject(t.error); };
     });
   }
 
   function tx(mode, fn) {
     return openDb().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var t = db.transaction(STORE, mode);
-        var req = fn(t.objectStore(STORE));
-        t.oncomplete = function () { db.close(); resolve(req && typeof req === 'object' && 'result' in req ? req.result : undefined); };
-        t.onerror = function () { db.close(); reject(t.error); };
-      });
+      try {
+        return run(db, mode, fn);
+      } catch (e) {
+        /* The kept connection has gone away under us: open a new one, once. */
+        dbPromise = null;
+        return openDb().then(function (fresh) { return run(fresh, mode, fn); });
+      }
     });
   }
 
