@@ -177,6 +177,7 @@
     pointsSource: 'target',
     sylSubject: null,
     openChaps: {},
+    openSecs: {},      // syllabus sections the student has opened: 'contents|sub' or 'strand|sub|strand'
     ttDay: defaultTtDay()
   };
 
@@ -1124,17 +1125,54 @@
     return html;
   }
 
+  /* The topic's text gets the row's full width; when it was last studied and the
+     chapter field share the line underneath. */
   function topicRow(t, off, own) {
     var p = topicProgress(t.id);
     var ch = chapterFor(t);
-    var last = p.last ? 'studied ' + fmtDue(p.last).toLowerCase() : 'not studied yet';
+    var last = p.last ? 'Studied ' + fmtDue(p.last).toLowerCase() : 'Not studied yet';
     return '<div class="topic-row">' +
       '<button class="rag c' + p.conf + '" data-action="cycle-conf" data-id="' + esc(t.id) + '" aria-label="' + RAG_LABEL[p.conf] + '" title="' + RAG_LABEL[p.conf] + '"></button>' +
       '<div class="body"><div class="t">' + esc(t.title) + '</div>' +
-      '<div class="meta">' + (t.detail ? esc(t.detail) + ' · ' : '') + last + (t.weight >= 3 ? ' · heavily examined' : '') + '</div></div>' +
+      (t.detail ? '<div class="meta">' + esc(t.detail) + '</div>' : '') +
+      '<div class="foot"><span class="status">' + last + (t.weight >= 3 ? ' · <span class="hx">heavily examined</span>' : '') + '</span>' +
       '<label class="ch"><input data-chapter="' + esc(t.id) + '" value="' + esc(ch) + '" placeholder="ch." aria-label="Chapter in your book"' + (off ? ' disabled' : '') + '></label>' +
+      '</div></div>' +
       (own ? '<button class="icon-btn" data-action="del-topic" data-id="' + esc(t.id) + '" aria-label="Remove">&times;</button>' : '') +
       '</div>';
+  }
+
+  /* The book's contents and each strand fold down to one line that still shows
+     how it is going; `key` is remembered in ui.openSecs. Title and meta are HTML. */
+  function secHead(key, title, meta) {
+    var open = !!ui.openSecs[key];
+    return '<button class="sec-head" data-action="toggle-sec" data-id="' + esc(key) + '" aria-expanded="' + open + '">' +
+      '<span class="sec-main"><span class="sec-t">' + title + '</span><span class="sec-meta">' + meta + '</span></span>' +
+      '<span class="chev" aria-hidden="true"></span></button>';
+  }
+  function secClass(key, extra) {
+    return 'sec card flush' + (ui.openSecs[key] ? ' open' : '') + (extra ? ' ' + extra : '');
+  }
+
+  /* One row per chapter of the contents, opening onto its parts — the same row
+     the Study screen uses. */
+  function contentsChapter(sub, entry, c, byTopic) {
+    var mapped = (c.topics || []).map(function (t) { return byTopic[sub.id + ':' + t.replace('.', ':')]; }).filter(Boolean);
+    var ci = entry.chapters.indexOf(c);
+    var subs = chapterSubs(c, sub.id, entry);
+    var openKey = entry.id + '|' + ci;
+    var head = '<span class="n">' + esc(String(c.n)) + '</span>' +
+      '<span class="t">' + esc(c.title) +
+        (mapped.length ? '<span class="maps">→ ' + mapped.map(esc).join(' · ') + '</span>' : '') + '</span>';
+    if (!subs.length) return '<div class="subs-chap"><div class="subs-head static">' + head + '</div></div>';
+    var open = !!ui.openChaps[openKey];
+    var sum = subsSummary(sub.id, entry, c);
+    return '<div class="subs-chap' + (open ? ' open' : '') + '">' +
+      '<button class="subs-head" data-action="toggle-chap" data-id="' + esc(openKey) + '" aria-expanded="' + open + '">' + head +
+        '<span class="side">' + (sum || subs.length + (subs.length === 1 ? ' part' : ' parts')) + '</span>' +
+        '<span class="chev" aria-hidden="true"></span>' +
+      '</button>' +
+      (open ? subsHtml(sub.id, entry, c, ci) : '') + '</div>';
   }
 
   function renderSyllabus() {
@@ -1159,16 +1197,23 @@
     var b = state.books[sub.id] || { book: '', custom: '', ch: {} };
     var mine = state.customTopics[sub.id] || [];
     var skip = state.skipStrands[sub.id] || {};
+    var entry = bookEntry(sub.id);
+    var hasChapters = !!(entry && entry.chapters);
+
+    /* One bar for all three ratings, and a legend that leaves out the empty ones. */
+    var RATED = [[3, 'solid', 'var(--good)'], [2, 'getting there', 'var(--gold)'], [1, 'shaky', 'var(--danger)']];
+    var legend = RATED.filter(function (r) { return conf[r[0]]; }).map(function (r) {
+      return '<span><i style="background:' + r[2] + '"></i>' + conf[r[0]] + ' ' + r[1] + '</span>';
+    });
+    if (conf[0]) legend.push('<span><i style="border:2px solid var(--border-strong);width:8px;height:8px"></i>' + conf[0] + ' not rated</span>');
 
     var html = '<div class="card">' +
       '<div class="card-head"><h2>' + esc(sub.name) + '</h2><span class="side">' + (sub.level === 'H' ? 'Higher' : 'Ordinary') + ' Level</span></div>' +
       (list.length
-        ? '<div class="track good"><i style="width:' + Math.round(conf[3] / list.length * 100) + '%"></i></div>' +
-          '<div class="rag-legend">' +
-            '<span><i style="background:var(--good)"></i>' + conf[3] + ' solid</span>' +
-            '<span><i style="background:var(--gold)"></i>' + conf[2] + ' getting there</span>' +
-            '<span><i style="background:var(--danger)"></i>' + conf[1] + ' shaky</span>' +
-            '<span><i style="border:2px solid var(--border-strong);width:8px;height:8px"></i>' + conf[0] + ' not rated</span></div>'
+        ? '<div class="rag-bar" aria-hidden="true">' + RATED.map(function (r) {
+            return conf[r[0]] ? '<i class="c' + r[0] + '" style="width:' + (conf[r[0]] / list.length * 100).toFixed(2) + '%"></i>' : '';
+          }).join('') + '</div>' +
+          '<div class="rag-legend">' + legend.join('') + '</div>'
         : '') +
       '<label class="field" style="margin-top:14px"><span>Your textbook</span><select id="sylBook">' +
         '<option value="">No book set</option>' +
@@ -1181,73 +1226,70 @@
       (b.book === 'custom'
         ? '<label class="field"><span>Book title</span><input id="sylBookCustom" value="' + esc(b.custom || '') + '" placeholder="Whatever is on the cover"></label>'
         : '') +
-      '<p class="hint" style="margin-top:10px">Tap the circle to rate a topic; type the chapter number from your own book and the planner will name it in each block.' +
-        (cat && cat.note ? ' ' + esc(cat.note) : '') + '</p>' +
+      '<p class="hint" style="margin:10px 0 0">' + (hasChapters
+        ? 'Tap a circle to rate a topic. The chapters are filled in from your book.'
+        : 'Tap a circle to rate a topic, and type in the chapter from your own book so the planner can name it.') + '</p>' +
+      (cat && cat.note ? '<p class="hint" style="margin:6px 0 0">' + esc(cat.note) + '</p>' : '') +
       '</div>';
 
-    var entry = bookEntry(sub.id);
-    if (entry && entry.chapters) {
+    if (hasChapters) {
       var byTopic = {};
       list.forEach(function (t) { byTopic[t.id] = t.title; });
-      html += '<div class="card"><div class="card-head"><h2>' + esc(entry.short || entry.title) + ' — contents</h2>' +
-        '<button class="link" data-action="fill-chapters">Refill chapters</button></div>' +
-        '<p class="hint">' + (entry.sectioned
-          ? 'Chapter titles and section headings are from the book’s own contents pages. '
-          : 'Chapter numbers and titles are from the current edition; the line under each is what it maps to in the syllabus above, not the book’s own section headings. ') +
-          'Open a chapter to rate its parts one by one — the topic’s circle below follows their average. ' +
-          'Picking this book fills the chapter fields; Refill puts them back if you have changed any.</p>';
+      var cKey = 'contents|' + sub.id;
+      var parts = 0, rated = 0;
+      entry.chapters.forEach(function (c) {
+        subConfs(sub.id, entry, c).forEach(function (v) { parts++; if (v) rated++; });
+      });
+      html += '<section class="' + secClass(cKey) + '">' +
+        secHead(cKey, esc(entry.short || entry.title) + ' — contents',
+          '<span>' + entry.chapters.length + ' chapters' +
+            (parts ? ' · ' + (rated ? rated + ' of ' + parts + ' parts rated' : parts + ' parts to rate') : '') + '</span>') +
+        '<div class="sec-body"><div class="sec-intro"><p class="hint">' + (entry.sectioned
+          ? 'Chapters and section headings from the book’s own contents pages.'
+          : 'Chapters from the current edition, with the syllabus topics each one covers.') +
+          ' Rate a chapter’s parts and the topic’s circle follows their average.</p>' +
+          '<button class="link" data-action="fill-chapters" title="Put the book’s chapter numbers back in every topic, including any you have changed">Refill chapters</button></div>';
       (entry.volumes || ['']).forEach(function (volName, vi) {
         var chaps = entry.chapters.filter(function (c) { return (c.vol || 0) === vi; });
         if (!chaps.length) return;
-        if (volName) html += '<div class="strand-head"><span class="d">' + esc(volName) + '</span></div>';
-        html += '<div class="chapters">' + chaps.map(function (c) {
-          var mapped = (c.topics || []).map(function (t) { return byTopic[sub.id + ':' + t.replace('.', ':')]; })
-            .filter(Boolean);
-          var ci = entry.chapters.indexOf(c);
-          var subs = chapterSubs(c, sub.id, entry);
-          var openKey = entry.id + '|' + ci;
-          var open = !!ui.openChaps[openKey];
-          var sum = subsSummary(sub.id, entry, c);
-          var brief = c.covers || (c.subs && c.subs.join(' · ').length <= 240 ? c.subs.join(' · ') : '');
-          return '<div class="chap' + (open ? ' open' : '') + '"><span class="n">' + esc(String(c.n)) + '</span><div class="body"><div class="t">' + esc(c.title) + '</div>' +
-            (brief && !open ? '<div class="meta">' + esc(brief) + '</div>' : '') +
-            (mapped.length ? '<div class="meta maps">→ ' + mapped.map(esc).join(' · ') + '</div>' : '') +
-            (subs.length
-              ? '<button class="link small" data-action="toggle-chap" data-id="' + esc(openKey) + '">' +
-                  (open ? 'Hide the parts' : 'Rate the ' + subs.length + ' part' + (subs.length === 1 ? '' : 's')) +
-                  (sum ? ' · ' + sum : '') + '</button>'
-              : '') +
-            (open ? subsHtml(sub.id, entry, c, ci) : '') +
-            '</div></div>';
-        }).join('') + '</div>';
+        if (volName) html += '<div class="vol-head">' + esc(volName) + '</div>';
+        html += '<div class="chapters">' + chaps.map(function (c) { return contentsChapter(sub, entry, c, byTopic); }).join('') + '</div>';
       });
-      html += '</div>';
+      html += '</div></section>';
     }
 
     if (cat) {
       cat.strands.forEach(function (st) {
         var off = !!skip[st.id];
-        var rows = st.topics.filter(function (t) { return !(t.hl && sub.level !== 'H'); })
-          .map(function (t) { return topicRow(catTopic(sub, st, t), off, false); });
+        var topics = st.topics.filter(function (t) { return !(t.hl && sub.level !== 'H'); })
+          .map(function (t) { return { t: catTopic(sub, st, t), own: false }; });
         mine.filter(function (t) { return t.strand === st.id; })
-          .forEach(function (t) { rows.push(topicRow(ownTopic(sub, t), off, true)); });
-        html += '<section class="group' + (off ? ' strand-off' : '') + '">' +
-          '<div class="strand-head"><span class="d">' + esc(st.title) + '</span>' +
-          (st.paper ? '<span class="side">' + esc(st.paper) + '</span>' : '') +
-          '<label><input type="checkbox" data-action="toggle-strand" data-strand="' + esc(st.id) + '"' + (off ? '' : ' checked') + '> on my course</label></div>' +
-          '<div class="card flush">' + rows.join('') + '</div></section>';
+          .forEach(function (t) { topics.push({ t: ownTopic(sub, t), own: true }); });
+        var key = 'strand|' + sub.id + '|' + st.id;
+        var solid = topics.filter(function (x) { return topicProgress(x.t.id).conf === 3; }).length;
+        var meta = '<span>' + (st.paper ? esc(st.paper) + ' · ' : '') +
+            (off ? 'not on my course' : solid + ' of ' + topics.length + ' solid') + '</span>' +
+          (off || !topics.length ? '' : '<span class="dots" aria-hidden="true">' + topics.map(function (x) {
+            return '<i class="c' + topicProgress(x.t.id).conf + '"></i>';
+          }).join('') + '</span>');
+        html += '<section class="' + secClass(key, off ? 'off' : '') + '">' + secHead(key, esc(st.title), meta) +
+          '<div class="sec-body">' +
+            '<label class="sec-toggle"><span>On my course</span><input type="checkbox" data-action="toggle-strand" data-strand="' + esc(st.id) + '"' + (off ? '' : ' checked') + '></label>' +
+            topics.map(function (x) { return topicRow(x.t, off, x.own); }).join('') +
+          '</div></section>';
       });
     }
 
     var loose = mine.filter(function (t) { return !t.strand || !cat; });
-    html += '<section class="group"><div class="strand-head"><span class="d">My own topics</span>' +
-      '<button class="link" data-action="add-topic">+ Add topic</button></div>' +
-      (loose.length
-        ? '<div class="card flush">' + loose.map(function (t) { return topicRow(ownTopic(sub, t), false, true); }).join('') + '</div>'
-        : '<div class="day-free">' + (cat && cat.strands.length
+    html += '<section class="sec card flush open">' +
+      '<div class="sec-head static"><span class="sec-main"><span class="sec-t">My own topics</span></span>' +
+        '<button class="link" data-action="add-topic">+ Add topic</button></div>' +
+      '<div class="sec-body">' + (loose.length
+        ? loose.map(function (t) { return topicRow(ownTopic(sub, t), false, true); }).join('')
+        : '<p class="empty">' + (cat && cat.strands.length
             ? 'Your set texts, poets, case studies — anything your class covers that is not listed above.'
-            : 'There is no built-in topic list for ' + esc(sub.name) + ' yet. Add the topics your class covers and the planner will use them.') + '</div>') +
-      '</section>';
+            : 'There is no built-in topic list for ' + esc(sub.name) + ' yet. Add the topics your class covers and the planner will use them.') + '</p>') +
+      '</div></section>';
 
     if (cat && cat.source) {
       html += '<p class="hint" style="margin-top:14px">' + esc(cat.source) + '. Headings follow the specification; switch off anything your teacher is leaving out.</p>';
@@ -2713,6 +2755,13 @@
           if (wrapTopic) wrapList.innerHTML = subsListHtml(wrapTopic);
         } else if (ui.view === 'study') renderTimerSubs();
         else renderSyllabus();
+        break;
+      }
+      case 'toggle-sec': {
+        ui.openSecs[id] = !ui.openSecs[id];
+        var sec = el.closest('.sec');
+        if (sec) sec.classList.toggle('open', ui.openSecs[id]);
+        el.setAttribute('aria-expanded', String(ui.openSecs[id]));
         break;
       }
       case 'wrap-done': finishWrapUp(); break;
