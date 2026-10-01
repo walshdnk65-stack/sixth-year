@@ -54,6 +54,10 @@ is per day.
 think it will take, and notes. Grouped into Overdue / Today / Tomorrow / This week /
 Later, with the total time each group needs. Tick it off when it is done.
 
+Add homework during a class and the subject is already filled in from the timetable —
+whatever is on right now. Between classes, at lunch or after school it starts blank, and
+it has to be picked before saving.
+
 The due-date field has quick buttons, the first of which is **the next time that subject
 is actually on** — "Next Maths class · Tue 09:40" — worked out from your timetable, since
 that is usually when homework is wanted. Open a class in the timetable and there is an

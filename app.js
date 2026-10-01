@@ -2127,16 +2127,27 @@
     return out.join('');
   }
 
+  /* The subject of the class on the timetable right now, if it is one of the
+     student's subjects — homework is usually written down in the class that set it. */
+  function currentClassSubject() {
+    var cur = nowNext().current;
+    return cur && cur.cls.subjectId && subject(cur.cls.subjectId) ? cur.cls.subjectId : null;
+  }
+
   function homeworkModal(id, preset) {
     preset = preset || {};
     var h = id ? state.homework.filter(function (x) { return x.id === id; })[0] : null;
     var due = h ? new Date(h.due)
       : (preset.due ? new Date(preset.due) : atTime(addDays(new Date(), 1), '09:00'));
-    var subjectId = h ? h.subjectId
-      : (preset.subjectId || (state.subjects.length ? state.subjects[0].id : null));
+    /* New homework takes the class that is on now; with nothing on, the subject
+       starts blank rather than guessing. */
+    var fromClass = !h && !preset.subjectId ? currentClassSubject() : null;
+    var subjectId = h ? h.subjectId : (preset.subjectId || fromClass);
     openModal(h ? 'Edit homework' : 'Add homework',
       '<label class="field"><span>What is it?</span><input id="mTitle" placeholder="e.g. Essay on Macbeth, Ch.7 questions" value="' + esc(h ? h.title : '') + '"></label>' +
-      '<label class="field"><span>Subject</span><select id="mSubject">' + subjectOptions(subjectId) + '</select></label>' +
+      '<label class="field"><span>Subject</span><select id="mSubject">' +
+        '<option value="">Choose a subject…</option>' + subjectOptions(subjectId) + '</select></label>' +
+      (fromClass ? '<p class="hint" id="mSubjectNote" style="margin:-4px 0 12px">Filled in from the class on now.</p>' : '') +
       '<div class="grid2">' +
         '<label class="field"><span>Due</span><input type="datetime-local" id="mDue" value="' + localDatetimeValue(due) + '"></label>' +
         '<label class="field"><span>Minutes</span><input type="number" id="mEst" min="0" step="15" inputmode="numeric" value="' + (h && h.estMins ? h.estMins : 30) + '"></label>' +
@@ -2153,6 +2164,7 @@
   function saveHomework(id) {
     var title = $('#mTitle').value.trim();
     if (!title) { toast('Give it a name first'); return; }
+    if (!$('#mSubject').value && state.subjects.length) { toast('Pick a subject first'); return; }
     var dueVal = $('#mDue').value;
     var due = dueVal ? new Date(dueVal) : atTime(addDays(new Date(), 1), '09:00');
     var rec = id ? state.homework.filter(function (x) { return x.id === id; })[0] : null;
@@ -2934,6 +2946,8 @@
     if (subjPick) {
       var quick = $('#dueQuick');
       if (quick) quick.innerHTML = dueQuickHtml(subjPick.value);
+      var fillNote = $('#mSubjectNote');
+      if (fillNote) fillNote.remove();
     }
     var el = e.target.closest('[data-action="grade"]');
     if (el) {
