@@ -170,6 +170,11 @@ The interface is built mobile first and every feature is reachable on a 375px sc
 - **Safe areas.** Notch and home-indicator insets are respected in the header, the tab bar
   and inside sheets.
 - **Nothing scrolls sideways.** Long subject names truncate, wide rows wrap.
+- **Held sideways.** On a short screen the header scrolls away with the page instead of
+  staying pinned, and focus mode shrinks the dial so its buttons stay on screen.
+- **Messages stay visible.** Short confirmations ("Saved", "Pick a subject first") sit
+  above everything, and move to the top of the screen while a sheet or focus mode is up
+  so they never cover a form or a button.
 
 ## Notifications
 

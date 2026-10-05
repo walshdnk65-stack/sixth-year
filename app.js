@@ -2091,12 +2091,14 @@
       '<div class="sheet-foot">' + foot + '</div>';
     $('#modalBack').hidden = false;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('sheet-open');   // moves messages clear of the sheet
     if (onOpen) onOpen($('#modal'));
   }
   function closeModal() {
     $('#modalBack').hidden = true;
     $('#modal').innerHTML = '';
     document.body.style.overflow = '';
+    document.body.classList.remove('sheet-open');
   }
 
   function subjectOptions(selected) {
@@ -2152,7 +2154,7 @@
         '<label class="field"><span>Due</span><input type="datetime-local" id="mDue" value="' + localDatetimeValue(due) + '"></label>' +
         '<label class="field"><span>Minutes</span><input type="number" id="mEst" min="0" step="15" inputmode="numeric" value="' + (h && h.estMins ? h.estMins : 30) + '"></label>' +
       '</div>' +
-      '<div class="row" id="dueQuick" style="margin:-2px 0 12px">' + dueQuickHtml(subjectId) + '</div>' +
+      '<div class="row" id="dueQuick" style="margin:8px 0 12px">' + dueQuickHtml(subjectId) + '</div>' +
       '<label class="field"><span>Notes</span><textarea id="mNotes" placeholder="Page numbers, what the teacher said, anything else">' + esc(h ? h.notes : '') + '</textarea></label>',
       (h ? '<button class="btn danger" data-action="delete-hw" data-id="' + h.id + '">Delete</button>' : '') +
       '<button class="btn ghost" data-action="close-modal">Cancel</button>' +

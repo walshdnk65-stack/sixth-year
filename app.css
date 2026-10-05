@@ -148,6 +148,12 @@ p { margin: 0; }
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
 }
+/* A phone held sideways is too short to keep the header pinned: pinned, it and
+   the tab bar left a third to a half of the screen for the page itself. There it
+   scrolls away with the page instead. */
+@media (max-height: 520px) {
+  .shell-top { position: relative; }
+}
 header.top {
   display: flex;
   align-items: center;
@@ -254,7 +260,7 @@ nav.tabs {
   left: 0; right: 0; bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 2px;
   padding: 6px 6px env(safe-area-inset-bottom);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
@@ -269,12 +275,15 @@ nav.tabs button {
   border: 0; border-radius: var(--r-sm);
   background: none;
   color: var(--faint);
-  font-size: 10px; font-weight: 550; letter-spacing: 0.01em;
+  /* Six labels have to share the width: on a small phone with larger text they
+     stop growing with the text rather than pushing "Setup" off the screen. */
+  font-size: min(10px, calc(3.1vw / var(--zoom))); font-weight: 550; letter-spacing: 0.01em;
+  white-space: nowrap;
   cursor: pointer;
 }
 nav.tabs button .ico {
   display: grid; place-items: center;
-  width: 40px; height: 26px; border-radius: 999px;
+  width: min(40px, 100%); height: 26px; border-radius: 999px;
   transition: background 0.18s ease, color 0.18s ease;
 }
 nav.tabs button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -302,7 +311,7 @@ nav.tabs .brand { display: none; }
 @media (min-width: 900px) {
   :root { --sidebar: 232px; }
 
-  body { padding-bottom: 0; padding-left: var(--sidebar); min-height: 100dvh; }
+  body { padding-bottom: 0; padding-left: var(--sidebar); min-height: calc(100dvh / var(--zoom)); }
 
   header.top { max-width: none; padding: 22px 28px 14px; }
   header.top .title { font-size: 24px; }
@@ -440,13 +449,16 @@ nav.tabs .brand { display: none; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
+/* Inline-block rather than flex so a long subject, teacher or college name can
+   end in "…" at the edge of its row instead of running off the screen. */
 .pill {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-block; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
   padding: 3px 9px; border-radius: 999px;
   background: var(--surface-2); color: var(--dim);
   font-size: 11.5px; font-weight: 550; white-space: nowrap;
 }
-.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+.pill .dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; vertical-align: middle; border-radius: 50%; background: currentColor; }
 .pill.late { background: var(--danger-soft); color: var(--danger); }
 .pill.soon { background: var(--warn-soft); color: var(--warn); }
 .pill.ok { background: var(--accent-soft); color: var(--accent); }
@@ -460,6 +472,18 @@ nav.tabs .brand { display: none; }
   font-size: 17px; line-height: 1; cursor: pointer;
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* Small controls keep their look but get a thumb-sized tap area, sized to stay
+   inside the gap to the next control so they never take its taps. */
+.rag, .icon-btn, .card-head .link, .sec-head .link, .sec-intro .link, #btnFocus { position: relative; }
+.item .tick::before, .rag::before, .icon-btn::before {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 44px; height: 44px; transform: translate(-50%, -50%);
+}
+.card-head .link::before, .sec-head .link::before, .sec-intro .link::before, #btnFocus::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 40px; transform: translateY(-50%);
+}
 
 /* ============================================================
    Buttons and forms
@@ -732,13 +756,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 .topic-row:first-child { border-top: 0; }
 .topic-row .body { flex: 1; min-width: 0; }
 .topic-row .t { font-size: 14px; font-weight: 560; line-height: 1.35; }
-.topic-row .meta { margin-top: 2px; color: var(--dim); font-size: 12.5px; line-height: 1.45; }
-.topic-row .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.topic-row .meta { margin-top: 2px; color: var(--dim); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.topic-row .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-top: 6px; }
 .topic-row .status { min-width: 0; color: var(--faint); font-size: 12px; }
 .topic-row .hx { color: var(--info); font-weight: 560; white-space: nowrap; }
 .topic-row .ch { flex: 0 0 auto; width: 92px; margin: 0; }
 .topic-row .ch input {
-  min-height: 32px; padding: 4px 8px;
+  min-height: 36px; padding: 4px 8px;
   font-size: 12.5px; text-align: center; font-variant-numeric: tabular-nums;
 }
 
@@ -752,7 +776,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 .subs-chap { padding: 8px 0 2px; border-top: 1px solid var(--border); }
 .subs-chap:first-of-type { border-top: 0; }
 .subs-head {
-  display: flex; align-items: center; gap: 10px; width: 100%;
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px;
   padding: 2px 0; margin: 0; border: 0; background: none;
   font: inherit; font-size: 14px; font-weight: 560; color: inherit; text-align: left;
   cursor: pointer; border-radius: 8px;
@@ -767,7 +791,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
   border-radius: 8px; background: var(--surface-2);
   font-size: 12.5px; font-weight: 650; font-variant-numeric: tabular-nums;
 }
-.subs-head .t { flex: 1; min-width: 0; }
+.subs-head .t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .subs-head .side { color: var(--dim); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .subs { margin-top: 2px; }
 .sub-row {
@@ -826,16 +850,22 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 
 .timer-card { text-align: center; }
 .timer-card .seg { margin: 0 auto 14px; max-width: 320px; }
-.dial { position: relative; width: min(224px, 62vw); aspect-ratio: 1; margin: 4px auto 18px; }
+.dial {
+  position: relative; width: min(224px, calc(62vw / var(--zoom))); aspect-ratio: 1; margin: 4px auto 18px;
+  container-type: inline-size;   /* the time below scales with the dial */
+}
 .dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .dial .track-ring { stroke: var(--surface-3); }
 .dial .prog { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
 .dial.break .prog { stroke: var(--gold); }
 .dial .readout { position: absolute; inset: 0; display: grid; place-content: center; gap: 4px; text-align: center; }
-.dial .time { font-size: clamp(34px, 11vw, 44px); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.dial .time { font-size: clamp(34px, 11vw, 44px); font-size: clamp(20px, 18.5cqi, 44px); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 .dial .mode { color: var(--faint); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
-.timer-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.timer-actions .btn { padding-inline: 8px; white-space: nowrap; }
+/* Three equal buttons in a row while they fit; when the space is too narrow
+   (small phones with larger text) the last drops to its own line rather than
+   pushing off the side of the screen. */
+.timer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.timer-actions .btn { flex: 1 1 0; padding-inline: 8px; white-space: nowrap; }
 
 /* ============================================================
    Focus mode — the timer takes over the screen
@@ -860,23 +890,42 @@ body.focus-on .timer-card {
   position: fixed; inset: 0; z-index: 80;
   max-width: none; margin: 0; border: 0; border-radius: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  justify-content: safe center;   /* if it ever overflows, from the top and scrollable */
+  overflow-y: auto;
   background: var(--bg); box-shadow: none;
   padding: 24px;
 }
-body.focus-on .dial { width: min(340px, 68vw); margin-bottom: 22px; }
-body.focus-on .timer-actions { width: min(380px, 88vw); }
+/* The dial also gives way to the height, so on a phone held sideways the
+   buttons and "Leave focus mode" stay on the screen. */
+body.focus-on .dial {
+  width: min(340px, calc(68vw / var(--zoom)), calc(100dvh / var(--zoom) - 330px));
+  min-width: 96px;
+  margin-bottom: 22px;
+}
+body.focus-on .timer-actions { width: min(380px, calc(88vw / var(--zoom))); }
 body.focus-on .focus-subject { display: block; }
 body.focus-on .focus-note { display: block; }
 body.focus-on #btnFocusExit { display: inline-flex; }
 body.focus-on .modal-back { z-index: 90; }
+/* A phone held sideways: the "phone face down" note goes, and the dial takes
+   what height is left. */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.focus-on .dial { width: min(340px, calc(68vw / var(--zoom)), calc(100dvh / var(--zoom) - 210px)); margin-bottom: 14px; }
+  body.focus-on .focus-note { display: none; }
+}
 .modal .subs-wrap { margin-top: 6px; }
 
 /* ============================================================
    Reading comfort
    ============================================================ */
 
-:root[data-text="large"] body { zoom: 1.12; }
-:root[data-text="larger"] body { zoom: 1.25; }
+/* The larger text sizes zoom the whole page. Zoom also multiplies anything sized
+   from the screen (vw, dvh), so those are divided by --zoom wherever they appear,
+   or a 90%-high sheet would come out 112% high and lose its top off the screen. */
+:root { --zoom: 1; }
+:root[data-text="large"] { --zoom: 1.12; }
+:root[data-text="larger"] { --zoom: 1.25; }
+:root[data-text] body { zoom: var(--zoom); }
 :root[data-font="readable"] body {
   font-family: "Atkinson Hyperlegible", Verdana, Tahoma, sans-serif;
   letter-spacing: 0.008em;
@@ -884,6 +933,11 @@ body.focus-on .modal-back { z-index: 90; }
 }
 :root[data-font="readable"] .item .body .t,
 :root[data-font="readable"] .tt-row .tt-body .t { letter-spacing: 0; }
+/* Its letters are wider, so the bottom tab labels allow for that to keep
+   "Homework" in its slot (the sidebar on wide screens has room to spare). */
+@media (max-width: 899.98px) {
+  :root[data-font="readable"] nav.tabs button { font-size: min(10px, calc(2.55vw / var(--zoom))); letter-spacing: 0; }
+}
 
 /* ============================================================
    Results and CAO courses
@@ -941,6 +995,14 @@ body.focus-on .modal-back { z-index: 90; }
 .subject-row .val { flex: 0 0 auto; width: 58px; text-align: right; color: var(--dim); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .subject-row .lvl { flex: 0 0 auto; color: var(--faint); font-size: 11.5px; width: 22px; }
 .subject-row select { flex: 1; min-height: 40px; padding: 8px 10px; font-size: 15px; }
+/* CAO rows: one line while they fit; on a narrow screen (or with larger text) the
+   grade menu and points move under the subject name instead of being squeezed
+   until the grade cannot be read. */
+#pointsRows .subject-row { flex-wrap: wrap; row-gap: 6px; }
+#pointsRows .subject-row .nm { flex: 1 1 84px; min-width: 0; }
+#pointsRows .subject-row select { flex: 1 0 76px; padding-right: 30px; }
+#pointsRows .subject-row .grow { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; }
+#pointsRows .subject-row .val { width: auto; min-width: 44px; }
 
 /* ============================================================
    Sheet (modal)
@@ -958,7 +1020,7 @@ body.focus-on .modal-back { z-index: 90; }
 
 .modal {
   width: 100%; max-width: 520px;
-  max-height: 90dvh;
+  max-height: calc(90dvh / var(--zoom));
   display: flex; flex-direction: column;
   background: var(--surface);
   border-radius: 22px 22px 0 0;
@@ -1002,7 +1064,7 @@ body.focus-on .modal-back { z-index: 90; }
 
 @media (min-width: 560px) {
   .modal-back { align-items: center; padding: 20px; }
-  .modal { border-radius: 20px; max-height: 84dvh; }
+  .modal { border-radius: 20px; max-height: calc(84dvh / var(--zoom)); }
   .modal .grab { display: none; }
   .modal .sheet-body { padding-top: 18px; }
   .modal .sheet-foot { padding-bottom: 14px; }
@@ -1012,11 +1074,16 @@ body.focus-on .modal-back { z-index: 90; }
    Toast
    ============================================================ */
 
+/* Above everything, focus mode and its sheet included, so a message is never
+   hidden behind the thing that caused it. */
 .toast {
-  position: fixed; left: 50%; z-index: 70;
+  position: fixed; left: 50%; z-index: 100;
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
   transform: translateX(-50%);
-  max-width: calc(100vw - 32px);
+  /* Sized to its text: centred from left: 50%, it would otherwise only get half
+     the screen and break "10 min logged to Mathematics" over two lines. */
+  width: max-content;
+  max-width: calc(100vw / var(--zoom) - 32px);
   padding: 11px 16px;
   border-radius: 999px;
   background: var(--text); color: var(--bg);
@@ -1025,6 +1092,10 @@ body.focus-on .modal-back { z-index: 90; }
   animation: toast 0.2s ease;
 }
 .toast[hidden] { display: none; }
+/* With a sheet open the bottom of the screen is its form and Save button, and in
+   focus mode it is the timer's buttons, so the message goes to the top instead. */
+body.sheet-open .toast,
+body.focus-on .toast { top: calc(10px + env(safe-area-inset-top)); bottom: auto; }
 @keyframes toast { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 @media (prefers-reduced-motion: reduce) {
