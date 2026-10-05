@@ -192,7 +192,11 @@ How they are delivered, in order of preference:
 2. **Background sync** — the service worker is registered for `periodicsync` and checks
    the reminder queue when the browser wakes it (Chrome on Android, installed PWAs).
 3. **Foreground catch-up** — whenever the app is open or you return to it, anything
-   ripe in the last six hours fires immediately.
+   that came due in the last ten minutes fires immediately.
+
+A reminder is never sent more than ten minutes late. If the phone was off, or the browser
+did not wake the app in time, it is skipped rather than arriving out of date
+(`LATE_LIMIT_MS` in `store.js`).
 
 The reminder queue lives in IndexedDB (`store.js`), which is why both the page and the
 service worker can read it.

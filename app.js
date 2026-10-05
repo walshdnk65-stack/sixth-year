@@ -2425,7 +2425,7 @@
     function push(key, at, title, body, view, allowLate) {
       if (at > horizon) return;
       if (at <= now && !allowLate) return;                 // the moment has gone, let it go
-      if (at <= now - 6 * 3600e3) return;                  // and never dump stale alerts
+      if (at <= now - ReminderQueue.LATE_LIMIT_MS) return; // and never send one more than ten minutes late
       out.push({ key: key, at: at, title: title, body: body, tag: key, view: view || 'today' });
     }
 

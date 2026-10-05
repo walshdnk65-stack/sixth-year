@@ -8,6 +8,10 @@
   var DB_VERSION = 1;
   var STORE = 'reminders';
 
+  /* A reminder more than this late is dropped, not sent: "Maths in 10 minutes"
+     an hour after the block started only gets in the way. */
+  var LATE_LIMIT_MS = 10 * 60e3;
+
   /* One connection, opened on first use and kept, rather than one per read or
      write. If the browser closes it (storage cleared, a newer version opening)
      the next call opens a fresh one. */
@@ -81,11 +85,11 @@
     });
   }
 
-  /* Reminders that are ripe: due, not yet fired, and not stale by more than
-     `graceMs` (so a phone that was off all week does not dump a week of alerts). */
+  /* Reminders that are ripe: due, not yet fired, and no more than `graceMs` late
+     (ten minutes unless told otherwise). Anything older is never sent. */
   function due(now, graceMs) {
     now = now || Date.now();
-    graceMs = graceMs === undefined ? 6 * 3600e3 : graceMs;
+    graceMs = graceMs === undefined ? LATE_LIMIT_MS : graceMs;
     return all().then(function (items) {
       return items.filter(function (r) {
         return !r.fired && r.at <= now && r.at > now - graceMs;
@@ -118,5 +122,8 @@
     });
   }
 
-  global.ReminderQueue = { all: all, sync: sync, due: due, markFired: markFired, prune: prune };
+  global.ReminderQueue = {
+    all: all, sync: sync, due: due, markFired: markFired, prune: prune,
+    LATE_LIMIT_MS: LATE_LIMIT_MS
+  };
 })(typeof self !== 'undefined' ? self : window);
