@@ -37,6 +37,10 @@
   --nav-h: 60px;
   --gutter: 16px;
   --maxw: 640px;
+
+  /* Tells the browser which theme its own parts should take: date and time
+     pickers, drop-down lists, scrollbars. Without it they stay light in dark mode. */
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -65,6 +69,7 @@
     --danger-soft: rgba(255, 129, 137, 0.14);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.8);
+    color-scheme: dark;
   }
 }
 
@@ -93,6 +98,7 @@
   --danger-soft: rgba(255, 129, 137, 0.14);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-lift: 0 18px 50px -18px rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
 }
 
 /* ============================================================
@@ -556,6 +562,12 @@ input[type="date"], input[type="time"], input[type="datetime-local"] { min-width
 }
 .switch:first-of-type { border-top: 0; }
 .switch > span:first-child { font-size: 14.5px; }
+/* The words are the switch's label: tapping anywhere along them flips it. */
+.switch > label:first-child {
+  flex: 1; align-self: stretch;
+  display: flex; align-items: center;
+  font-size: 14.5px; cursor: pointer;
+}
 .switch .ctl { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .switch .ctl input[type="time"] { width: 118px; min-height: 40px; padding: 8px 10px; font-size: 14px; }
 
@@ -1028,6 +1040,7 @@ body.focus-on .modal-back { z-index: 90; }
   animation: sheet 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
   overflow: hidden;
 }
+.modal:focus { outline: none; }   /* focus is moved here on opening, for keyboards and screen readers */
 @keyframes sheet { from { transform: translateY(24px); } to { transform: none; } }
 
 .modal .grab {

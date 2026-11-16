@@ -124,6 +124,12 @@ for open-ended study; *Stop & log* banks the elapsed time against the subject an
 rounded to the minute. Either way the clock survives a reload or a tab switch, and time
 can also be logged by hand afterwards.
 
+The Pomodoro counts the focus time actually done, rather than working it out from the
+settings, so nothing is lost or invented: *Reset* banks whatever the block had, running
+or paused; changing the focus length half way still logs the real figure; and a block
+that ends while the phone is asleep is logged at the time it ended, not when the app was
+next opened.
+
 **Focus mode** takes the timer full screen — no tabs, no cards, just the clock, the
 subject and a reminder to put the phone down — and asks the browser to keep the screen
 awake. Escape or *Leave focus mode* returns.
@@ -233,12 +239,36 @@ nothing to push from — which is why the scheduling above is done on the device
 | `store.js` | IndexedDB reminder queue shared with the service worker |
 | `sw.js` | Offline cache, background reminders, notification clicks, push |
 | `manifest.webmanifest` | Install metadata |
+| `icon.svg`, `icon-maskable.svg`, `badge.svg` | The logo, as drawn |
+| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `badge-96.png` | The same artwork as PNG, for the places that will not take SVG: the iPhone Home Screen, some Android installs and notifications. Redraw them if the SVGs change |
+
+### Updates
+
+Every change to `app.js`, `app.css`, `store.js` or `syllabus.js` needs the `?v=` number
+raised in `index.html` and `sw.js`, along with the cache name in `sw.js`; the service
+worker serves its saved copy otherwise. When a new version has installed, an open app
+reloads itself onto it if nothing is in progress — no sheet open, no timer running —
+and otherwise picks it up the next time it is opened. An app left open in the background
+checks for a new version when it is brought back to the front, at most once an hour.
 
 ## Data
 
 Nothing leaves the device. Setup → *Export backup* writes a JSON file; *Import backup*
 restores it on another phone or browser. Clearing site data wipes everything, so export
 before you switch device.
+
+Importing replaces everything in the app, so it asks first and says when the backup was
+made. A backup from an older version is brought up to date as it comes in, and a file
+that is not a backup — or has been tampered with — is refused and changes nothing.
+
+The things that cannot be undone ask before they happen: restoring a backup, resetting,
+clearing the weekly plan, deleting a study session, and removing a subject that has
+topic ratings or a textbook set up (an empty one goes without a question).
+
+If the app is open twice — in a browser tab and installed, say — a save in one is picked
+up by the other, so neither overwrites the other's work. And if the saved data ever
+cannot be read, it is kept aside under `sixth-year-v1-unreadable` in the browser's
+storage, not overwritten by a fresh start.
 
 The app watches for the two ways that data gets lost. On an iPhone running in a Safari
 tab rather than from the Home Screen, Today shows a warning: Safari clears a site's

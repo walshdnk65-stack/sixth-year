@@ -129,6 +129,14 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  /* Mark the chosen button in a set, for the eye and for screen readers alike. */
+  function pickOne(sel, isChosen) {
+    $$(sel).forEach(function (b) {
+      var on = isChosen(b);
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function startOfDay(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
@@ -187,29 +195,52 @@
     return d >= 1 && d <= 5 ? d : 1;
   }
 
+  function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
+  function num(x, fallback) { x = +x; return isFinite(x) ? x : fallback; }
+
+  /* Bring saved or imported data up to the current shape: fill in what is
+     missing and repair what is the wrong kind, so nothing further on has to
+     guard against it. Data the app wrote itself comes through unchanged. */
+  function normalise(s) {
+    var d = defaults();
+    s.profile = Object.assign(d.profile, isObj(s.profile) ? s.profile : {});
+    s.notify = Object.assign(d.notify, isObj(s.notify) ? s.notify : {});
+    if (!Array.isArray(s.notify.lead)) s.notify.lead = [1440, 120];
+    ['subjects', 'homework', 'sessions', 'plan', 'results', 'courses'].forEach(function (k) {
+      s[k] = Array.isArray(s[k]) ? s[k].filter(isObj) : d[k];
+    });
+    s.subjects.forEach(function (sub, i) {
+      var old = LEGACY_COLORS.indexOf(String(sub.color).toLowerCase());
+      if (old !== -1) sub.color = COLORS[old];
+      if (!/^#[0-9a-f]{3,8}$/i.test(sub.color)) sub.color = COLORS[i % COLORS.length];
+      sub.name = String(sub.name == null ? '' : sub.name);
+      sub.level = sub.level === 'O' ? 'O' : 'H';
+      sub.priority = [1, 2, 3].indexOf(sub.priority) !== -1 ? sub.priority : 2;
+    });
+    s.homework.forEach(function (h) { h.estMins = num(h.estMins, 0); });
+    s.sessions.forEach(function (x) { x.mins = num(x.mins, 0); });
+    s.plan.forEach(function (b) { b.mins = num(b.mins, 45); b.day = num(b.day, 1); });
+    s.results.forEach(function (r) { r.percent = num(r.percent, 0); });
+    s.courses.forEach(function (c) { c.points = num(c.points, 0); });
+    if (!isObj(s.timetable) || !Array.isArray(s.timetable.slots)) s.timetable = d.timetable;
+    s.timetable.slots = s.timetable.slots.filter(isObj);
+    if (!isObj(s.timetable.classes)) s.timetable.classes = {};
+    ['topics', 'books', 'customTopics', 'skipStrands', 'grades'].forEach(function (k) {
+      if (!isObj(s[k])) s[k] = {};
+    });
+    if (!isObj(s.timer)) s.timer = null;
+    return s;
+  }
+
   function load() {
+    var raw = null;
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaults();
-      var s = JSON.parse(raw);
-      var d = defaults();
-      s.profile = Object.assign(d.profile, s.profile || {});
-      s.notify = Object.assign(d.notify, s.notify || {});
-      ['subjects', 'homework', 'sessions', 'plan', 'results', 'courses'].forEach(function (k) {
-        if (!Array.isArray(s[k])) s[k] = d[k];
-      });
-      s.grades = s.grades || {};
-      s.subjects.forEach(function (sub) {
-        var old = LEGACY_COLORS.indexOf(String(sub.color).toLowerCase());
-        if (old !== -1) sub.color = COLORS[old];
-      });
-      if (!s.timetable || !Array.isArray(s.timetable.slots)) s.timetable = d.timetable;
-      if (!s.timetable.classes) s.timetable.classes = {};
-      ['topics', 'books', 'customTopics', 'skipStrands'].forEach(function (k) {
-        if (!s[k] || typeof s[k] !== 'object') s[k] = {};
-      });
-      return s;
+      return normalise(JSON.parse(raw));
     } catch (e) {
+      /* Data that cannot be read is set aside, not lost to the next save. */
+      try { if (raw) localStorage.setItem(STORAGE_KEY + '-unreadable', raw); } catch (e2) { /* no room */ }
       return defaults();
     }
   }
@@ -229,6 +260,43 @@
   }
   function subjectName(id) { var s = subject(id); return s ? s.name : 'General'; }
   function subjectColor(id) { var s = subject(id); return s ? s.color : '#93a1b3'; }
+  function byId(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  /* Take a subject out, with everything that only makes sense alongside it: its
+     ratings, book, own topics, target grade and plan blocks. Homework, sessions
+     and results stay as history, and timetable periods keep its name. */
+  function removeSubject(id) {
+    var dropped = subject(id);
+    Object.keys(state.topics).forEach(function (k) { if (k.indexOf(id + ':') === 0) delete state.topics[k]; });
+    (state.customTopics[id] || []).forEach(function (t) { delete state.topics[t.id]; });
+    delete state.customTopics[id];
+    delete state.books[id];
+    delete state.skipStrands[id];
+    delete state.grades[id];
+    Object.keys(state.timetable.classes).forEach(function (k) {
+      var cl = state.timetable.classes[k];
+      if (cl && cl.subjectId === id) { cl.subjectId = null; cl.name = dropped ? dropped.name : 'Class'; }
+    });
+    state.subjects = state.subjects.filter(function (x) { return x.id !== id; });
+    state.plan = state.plan.filter(function (b) { return b.subjectId !== id; });
+  }
+  /* Has the student put work into this subject's syllabus that removing it would lose? */
+  function subjectHasWork(id) {
+    var bk = state.books[id];
+    return Object.keys(state.topics).some(function (k) { return k.indexOf(id + ':') === 0; }) ||
+      (state.customTopics[id] || []).length > 0 ||
+      !!(bk && (bk.book || Object.keys(bk.ch || {}).length || Object.keys(bk.subs || {}).length));
+  }
+  /* Asks before removing subjects that have ratings or a book set up; empty ones go quietly. */
+  function confirmRemoval(subs) {
+    var names = subs.filter(function (s) { return s && subjectHasWork(s.id); }).map(function (s) { return s.name; });
+    if (!names.length) return true;
+    return confirm('Remove ' + names.join(', ') + '? ' + (names.length === 1 ? 'Its' : 'Their') +
+      ' topic ratings, chapter numbers and study-plan blocks will be deleted.');
+  }
 
   /* ------------------------------------------------------------------ *
    * Derived data
@@ -470,7 +538,7 @@
     var day = ui.ttDay;
     $('#ttDays').innerHTML = SCHOOL_DAYS.map(function (d) {
       var n = classCount(d);
-      return '<button class="chip-btn' + (d === day ? ' active' : '') + '" data-action="tt-day" data-day="' + d + '">' +
+      return '<button class="chip-btn' + (d === day ? ' active' : '') + '" aria-pressed="' + (d === day) + '" data-action="tt-day" data-day="' + d + '">' +
         DAY_SHORT[d] + '<span class="n">' + (n ? n + (n === 1 ? ' class' : ' classes') : 'empty') + '</span></button>';
     }).join('');
 
@@ -504,7 +572,11 @@
     if (view !== 'study' && document.body.classList.contains('focus-on')) focusMode(false);
     ui.view = view;
     $$('.view').forEach(function (v) { v.classList.toggle('active', v.id === 'view-' + view); });
-    $$('#tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.view === view); });
+    $$('#tabs button').forEach(function (b) {
+      var on = b.dataset.view === view;
+      b.classList.toggle('active', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
     $('#hdrTitle').textContent = TITLES[view];
     if (history.replaceState) history.replaceState(null, '', '#' + view);
     render();
@@ -684,6 +756,9 @@
     if (t.running) { go('study'); focusMode(true); return; }
     var target = startTarget();
     if (!target) { go('study'); return; }
+    /* A block left paused part-way is banked to its own subject before the
+       timer is handed to the new one. */
+    if (t.kind !== 'stopwatch' && t.mode === 'focus') logElapsed();
     t.subjectId = target.subjectId;
     t.topicId = target.topicId;
     t.topic = target.topic || '';
@@ -691,6 +766,8 @@
       t.mode = 'focus';
       t.remaining = (state.profile.focusMins || 25) * 60;
       t.startedAt = 0;
+      t.done = 0;
+      t.runStart = 0;
     }
     t.quick = true;
     save(true);
@@ -894,7 +971,7 @@
     if (!b || !b.book) return '';
     if (b.book === 'custom') return b.custom || '';
     var cat = catalogueFor(subjectName(subjectId));
-    var hit = cat ? cat.books.filter(function (x) { return x.id === b.book; })[0] : null;
+    var hit = cat ? byId(cat.books, b.book) : null;
     return hit ? hit.title : '';
   }
   /* "Active Maths 4 (Books 1 & 2)" → "Active Maths 4"; "Less Stress More Success — Maths" → "Less Stress More Success" */
@@ -902,7 +979,7 @@
     var b = state.books[subjectId];
     if (!b || !b.book || b.book === 'custom') return null;
     var cat = catalogueFor(subjectName(subjectId));
-    return cat ? cat.books.filter(function (x) { return x.id === b.book; })[0] || null : null;
+    return cat ? byId(cat.books, b.book) : null;
   }
   function bookShort(subjectId) {
     var entry = bookEntry(subjectId);
@@ -1181,7 +1258,7 @@
     $('#sylSubjects').innerHTML = state.subjects.map(function (sub) {
       var list = topicsFor(sub);
       var solid = list.filter(function (t) { return topicProgress(t.id).conf === 3; }).length;
-      return '<button class="chip-btn' + (sub.id === ui.sylSubject ? ' active' : '') + '" data-action="syl-subject" data-id="' + sub.id + '">' +
+      return '<button class="chip-btn' + (sub.id === ui.sylSubject ? ' active' : '') + '" aria-pressed="' + (sub.id === ui.sylSubject) + '" data-action="syl-subject" data-id="' + sub.id + '">' +
         esc(sub.name) + '<span class="n">' + (list.length ? solid + '/' + list.length + ' solid' : 'no topics yet') + '</span></button>';
     }).join('');
 
@@ -1376,9 +1453,7 @@
   /* ---------------- Plan ---------------- */
 
   function renderPlan() {
-    $$('#planSeg button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.plantab === ui.planTab);
-    });
+    pickOne('#planSeg button', function (b) { return b.dataset.plantab === ui.planTab; });
     $('#planTimetable').hidden = ui.planTab !== 'timetable';
     $('#planStudy').hidden = ui.planTab !== 'study';
     $('#planSyllabus').hidden = ui.planTab !== 'syllabus';
@@ -1487,6 +1562,18 @@
     if (t.topicId === undefined) t.topicId = null;
     if (typeof t.swAccum !== 'number') t.swAccum = 0;
     if (typeof t.swStart !== 'number') t.swStart = 0;
+    /* Pomodoro time is counted directly (see focusSecs). A timer saved by an
+       older version is given the figures it implied. */
+    if (typeof t.done !== 'number') {
+      var full = (t.mode === 'focus' ? state.profile.focusMins : state.profile.breakMins) * 60;
+      t.done = Math.max(0, full - t.remaining) || 0;
+      t.runStart = t.running ? t.endsAt - t.remaining * 1000 : 0;
+    }
+    /* The subject may have been deleted since it was picked. */
+    if (t.subjectId && !subject(t.subjectId)) {
+      t.subjectId = state.subjects.length ? state.subjects[0].id : null;
+      t.topicId = null;
+    }
     /* Older versions copied the picked topic's title into the free-text box. */
     if (t.topicId && t.topic) {
       var picked = topicById(t.topicId);
@@ -1526,6 +1613,17 @@
   function timerRemaining() {
     var t = timerState();
     return t.running ? Math.max(0, Math.round((t.endsAt - Date.now()) / 1000)) : t.remaining;
+  }
+
+  /* Seconds of this Pomodoro block actually done: what was banked at each pause
+     plus the stretch running now. That stretch stops counting when the block
+     ends, however much later the app is next opened. Counting it, rather than
+     working back from the settings, stays right when a block is paused, reset
+     or has its length changed half way. */
+  function focusSecs() {
+    var t = timerState();
+    var live = t.running && t.runStart ? (Math.min(Date.now(), t.endsAt) - t.runStart) / 1000 : 0;
+    return Math.max(0, t.done + live);
   }
 
   /* Study: the parts of the chosen topic's chapter(s) in the student's book, each
@@ -1579,9 +1677,7 @@
     renderTimerSubs();
     $('#focusMins').value = state.profile.focusMins;
     $('#breakMins').value = state.profile.breakMins;
-    $$('#timerModeSeg button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.tmode === t.kind);
-    });
+    pickOne('#timerModeSeg button', function (b) { return b.dataset.tmode === t.kind; });
     $('#pomoSettings').hidden = t.kind === 'stopwatch';
     paintTimer();
 
@@ -1641,8 +1737,9 @@
     }
     if (t.remaining <= 0) t.remaining = (t.mode === 'focus' ? state.profile.focusMins : state.profile.breakMins) * 60;
     t.running = true;
-    t.endsAt = Date.now() + t.remaining * 1000;
-    if (!t.startedAt) t.startedAt = Date.now();
+    t.runStart = Date.now();
+    t.endsAt = t.runStart + t.remaining * 1000;
+    if (!t.startedAt) t.startedAt = t.runStart;
     save(true);
     runTicker();
   }
@@ -1659,16 +1756,21 @@
       return;
     }
     t.remaining = timerRemaining();
+    t.done = focusSecs();
+    t.runStart = 0;
     t.running = false;
     save(true);
     stopTicker();
     paintTimer();
   }
 
+  /* Reset banks whatever focus time the block had, running or paused. */
   function resetTimer(keepMode) {
     var t = timerState();
-    var ses = t.mode === 'focus' && t.running ? logElapsed() : null;
+    var ses = t.mode === 'focus' ? logElapsed() : null;
     t.running = false;
+    t.done = 0;
+    t.runStart = 0;
     if (!keepMode) t.mode = 'focus';
     t.remaining = (t.mode === 'focus' ? state.profile.focusMins : state.profile.breakMins) * 60;
     t.startedAt = 0;
@@ -1700,13 +1802,13 @@
 
   function logElapsed() {
     var t = timerState();
-    var total = state.profile.focusMins * 60;
-    var elapsed = Math.round((total - timerRemaining()) / 60);
+    var elapsed = Math.round(focusSecs() / 60);
     return elapsed >= 1 ? logSession(t.subjectId, timerLabel(t), elapsed, t.topicId) : null;
   }
 
-  function logSession(subjectId, topic, mins, topicId) {
-    var at = new Date().toISOString();
+  /* `when` (ms) is when the session ended, if that was not just now. */
+  function logSession(subjectId, topic, mins, topicId, when) {
+    var at = new Date(when || Date.now()).toISOString();
     var ses = { id: uid(), subjectId: subjectId, topic: topic || '', mins: mins, at: at, topicId: topicId || null };
     state.sessions.push(ses);
     markStudied(topicId, at);
@@ -1735,7 +1837,7 @@
     var ta = $('#wrapNote');
     var btn = $('[data-action="wrap-done"]');
     if (btn) {
-      var ses = state.sessions.filter(function (x) { return x.id === btn.dataset.id; })[0];
+      var ses = byId(state.sessions, btn.dataset.id);
       var note = ta ? ta.value.trim() : '';
       if (ses && note) ses.note = note;
       save(true);
@@ -1773,14 +1875,20 @@
 
   function completePhase() {
     var t = timerState();
+    /* The block is logged at its real length, and at the moment it ended: the
+       phone may have been asleep since, and this may be the next morning. */
+    var doneMins = Math.max(1, Math.round(focusSecs() / 60));
+    var endedAt = Math.min(Date.now(), t.endsAt || Date.now());
     t.running = false;
+    t.done = 0;
+    t.runStart = 0;
     stopTicker();
     var ses = null;
     if (t.mode === 'focus') {
-      ses = logSession(t.subjectId, timerLabel(t), state.profile.focusMins, t.topicId);
+      ses = logSession(t.subjectId, timerLabel(t), doneMins, t.topicId, endedAt);
       t.mode = 'break';
       t.remaining = state.profile.breakMins * 60;
-      if (state.notify.timer) notifyNow('Focus block done', dur(state.profile.focusMins) + ' of ' + subjectName(t.subjectId) + ' logged. Take a ' + state.profile.breakMins + ' minute break.', 'study');
+      if (state.notify.timer) notifyNow('Focus block done', dur(doneMins) + ' of ' + subjectName(t.subjectId) + ' logged. Take a ' + state.profile.breakMins + ' minute break.', 'study');
       beep();
     } else {
       t.mode = 'focus';
@@ -1960,9 +2068,7 @@
   }
 
   function renderPoints() {
-    $$('#pointsSrc button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.psrc === ui.pointsSource);
-    });
+    pickOne('#pointsSrc button', function (b) { return b.dataset.psrc === ui.pointsSource; });
     $('#pointsHint').textContent = ui.pointsSource === 'results'
       ? 'Using the latest test result for each subject, converted to a grade. Subjects with no result yet fall back to your target.'
       : 'Set the grade you are realistically working towards. Best six count, plus 25 bonus points for H6 or better in Higher Level Maths.';
@@ -1975,7 +2081,7 @@
         var r = latestResult(s.id);
         mid = '<span class="grow small muted">' + (r
           ? esc(r.label) + ' · ' + r.percent + '% · ' + gradeFromPercent(s.level, r.percent)
-          : 'no result — target ' + (target || 'not set')) + '</span>';
+          : 'no result — target ' + esc(target || 'not set')) + '</span>';
       } else {
         var opts = ['<option value="">—</option>'];
         for (var i = 1; i <= 8; i++) {
@@ -2084,21 +2190,42 @@
 
   /* Sheets are built as grab handle + scrolling body + a footer that stays put,
      so Save is always reachable with the keyboard up on a phone. */
+  var sheetOpener = null;   // what had the focus when the sheet opened, to hand it back
+
+  /* While a sheet is up, the page behind it is out of reach of the keyboard and
+     of screen readers as well as of touch. */
+  function setBackgroundInert(on) {
+    ['.shell-top', 'main', '#tabs'].forEach(function (sel) {
+      var el = $(sel);
+      if (el) el.inert = on;
+    });
+  }
+
   function openModal(title, body, foot, onOpen) {
-    $('#modal').innerHTML =
+    var modal = $('#modal');
+    if ($('#modalBack').hidden) sheetOpener = document.activeElement;
+    modal.innerHTML =
       '<div class="grab"></div>' +
-      '<div class="sheet-body"><h2>' + esc(title) + '</h2>' + body + '</div>' +
+      '<div class="sheet-body"><h2 id="sheetTitle">' + esc(title) + '</h2>' + body + '</div>' +
       '<div class="sheet-foot">' + foot + '</div>';
     $('#modalBack').hidden = false;
     document.body.style.overflow = 'hidden';
     document.body.classList.add('sheet-open');   // moves messages clear of the sheet
-    if (onOpen) onOpen($('#modal'));
+    setBackgroundInert(true);
+    modal.focus({ preventScroll: true });
+    if (onOpen) onOpen(modal);
   }
   function closeModal() {
     $('#modalBack').hidden = true;
     $('#modal').innerHTML = '';
     document.body.style.overflow = '';
     document.body.classList.remove('sheet-open');
+    setBackgroundInert(false);
+    /* Back to the button that opened it, if it is still there. */
+    if (sheetOpener && sheetOpener.tagName === 'BUTTON' && document.contains(sheetOpener)) {
+      sheetOpener.focus({ preventScroll: true });
+    }
+    sheetOpener = null;
   }
 
   function subjectOptions(selected) {
@@ -2138,7 +2265,7 @@
 
   function homeworkModal(id, preset) {
     preset = preset || {};
-    var h = id ? state.homework.filter(function (x) { return x.id === id; })[0] : null;
+    var h = id ? byId(state.homework, id) : null;
     var due = h ? new Date(h.due)
       : (preset.due ? new Date(preset.due) : atTime(addDays(new Date(), 1), '09:00'));
     /* New homework takes the class that is on now; with nothing on, the subject
@@ -2169,7 +2296,8 @@
     if (!$('#mSubject').value && state.subjects.length) { toast('Pick a subject first'); return; }
     var dueVal = $('#mDue').value;
     var due = dueVal ? new Date(dueVal) : atTime(addDays(new Date(), 1), '09:00');
-    var rec = id ? state.homework.filter(function (x) { return x.id === id; })[0] : null;
+    if (isNaN(due.getTime())) due = atTime(addDays(new Date(), 1), '09:00');
+    var rec = id ? byId(state.homework, id) : null;
     if (!rec) {
       rec = { id: uid(), done: false, createdAt: new Date().toISOString() };
       state.homework.push(rec);
@@ -2177,7 +2305,7 @@
     rec.title = title;
     rec.subjectId = $('#mSubject').value || null;
     rec.due = due.toISOString();
-    rec.estMins = +$('#mEst').value || 0;
+    rec.estMins = Math.max(0, Math.round(+$('#mEst').value) || 0);
     rec.notes = $('#mNotes').value.trim();
     save();
     closeModal();
@@ -2255,7 +2383,7 @@
         '<label class="field"><span>Teacher</span><input id="cTeacher" value="' + esc(c.teacher || '') + '" placeholder="e.g. Ms Ryan"></label>' +
       '</div>' +
       (existing && existing.subjectId
-        ? '<button class="link" data-action="hw-from-class" data-id="' + existing.subjectId + '">+ Add homework for this class</button>'
+        ? '<button class="link" data-action="hw-from-class" data-id="' + esc(existing.subjectId) + '">+ Add homework for this class</button>'
         : ''),
       (existing ? '<button class="btn danger" data-action="clear-class" data-day="' + day + '" data-slot="' + slotId + '">Clear</button>' : '') +
       '<button class="btn ghost" data-action="close-modal">Cancel</button>' +
@@ -2295,7 +2423,7 @@
   }
 
   function sessionModal(id) {
-    var ses = state.sessions.filter(function (x) { return x.id === id; })[0];
+    var ses = byId(state.sessions, id);
     if (!ses) return;
     openModal('Study session',
       '<label class="field"><span>Subject</span><select id="sesSubject">' + subjectOptions(ses.subjectId) + '</select></label>' +
@@ -2315,7 +2443,7 @@
   var RESULT_KINDS = ['Mock', 'Christmas test', 'Summer test', 'Class test', 'Oral', 'Practical', 'Other'];
 
   function resultModal(id) {
-    var r = id ? state.results.filter(function (x) { return x.id === id; })[0] : null;
+    var r = id ? byId(state.results, id) : null;
     openModal(r ? 'Edit result' : 'Add a result',
       '<label class="field"><span>Subject</span><select id="rSubject">' + subjectOptions(r ? r.subjectId : null) + '</select></label>' +
       '<div class="grid2">' +
@@ -2335,7 +2463,7 @@
   }
 
   function courseModal(id) {
-    var c = id ? state.courses.filter(function (x) { return x.id === id; })[0] : null;
+    var c = id ? byId(state.courses, id) : null;
     openModal(c ? 'Edit course' : 'Add a CAO course',
       '<label class="field"><span>Course</span><input id="coTitle" value="' + esc(c ? c.title : '') + '" placeholder="e.g. Computer Science"></label>' +
       '<div class="grid2">' +
@@ -2383,6 +2511,32 @@
     }).catch(function () { return null; });
   }
 
+  /* An installed app can sit open for days without ever loading a page, which
+     is when the browser would look for a new version; so ask when it comes back
+     to the front, at most once an hour. */
+  var lastUpdateCheck = Date.now();
+  function checkForUpdate() {
+    if (!swReg || !swReg.update || Date.now() - lastUpdateCheck < 3600e3) return;
+    lastUpdateCheck = Date.now();
+    swReg.update().catch(function () { /* offline: try again next time */ });
+  }
+
+  /* When a new version has installed and taken over, load it there and then if
+     nothing is in progress. Mid-session or with a sheet open it is left alone
+     and arrives the next time the app is opened. */
+  function watchForUpdates() {
+    if (!navigator.serviceWorker) return;
+    var hadController = !!navigator.serviceWorker.controller;
+    var reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadController) { hadController = true; return; }   // first install: nothing to update from
+      if (reloading || !$('#modalBack').hidden || document.body.classList.contains('focus-on') || timerState().running) return;
+      reloading = true;
+      flushTyping();
+      location.reload();
+    });
+  }
+
   function requestPeriodicSync() {
     if (!swReg || !swReg.periodicSync || !navigator.permissions) return;
     navigator.permissions.query({ name: 'periodic-background-sync' }).then(function (st) {
@@ -2412,7 +2566,7 @@
   function notifyNow(title, body, view) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     var opts = {
-      body: body, icon: './icon.svg', badge: './badge.svg',
+      body: body, icon: './icon-192.png', badge: './badge-96.png',
       tag: 'now-' + view, renotify: true, data: { view: view || 'today' }
     };
     if (swReg) swReg.showNotification(title, opts);
@@ -2493,8 +2647,9 @@
         if (left <= 0) continue;
         var mins = 0;
         for (var i2 = 0; i2 < 7; i2++) mins += minutesOn(addDays(sd, -i2), byDay);
+        var wks = Math.floor(left / 7);
         push('week:' + ymd(sd), atTime(sd, '19:00').getTime(),
-          Math.floor(left / 7) + ' weeks to the Leaving Cert',
+          (wks >= 1 ? wks + (wks === 1 ? ' week' : ' weeks') : left + (left === 1 ? ' day' : ' days')) + ' to the Leaving Cert',
           'You did ' + dur(mins) + ' of study this week. Set up the week ahead.', 'plan');
       }
     }
@@ -2534,7 +2689,7 @@
         .forEach(function (r) {
           try {
             swReg.showNotification(r.title, {
-              body: r.body, tag: r.tag, icon: './icon.svg', badge: './badge.svg',
+              body: r.body, tag: r.tag, icon: './icon-192.png', badge: './badge-96.png',
               showTrigger: new window.TimestampTrigger(r.at),
               data: { view: r.view, key: r.key, scheduled: true }
             });
@@ -2554,7 +2709,7 @@
 
   function notifyQueued(r) {
     var opts = {
-      body: r.body, icon: './icon.svg', badge: './badge.svg',
+      body: r.body, icon: './icon-192.png', badge: './badge-96.png',
       tag: r.tag, renotify: true, data: { view: r.view, key: r.key }
     };
     if (swReg) swReg.showNotification(r.title, opts);
@@ -2581,24 +2736,50 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  /* A backup may have come from someone else, so it is not trusted the way the
+     app's own data is: ids go straight into the page, and anything that is not
+     a plain id means the file is refused. */
+  function plainIds(s) {
+    var lists = [s.subjects, s.homework, s.sessions, s.plan, s.results, s.courses, s.timetable.slots];
+    Object.keys(s.customTopics).forEach(function (k) { lists.push(s.customTopics[k]); });
+    return lists.every(function (list) {
+      return Array.isArray(list) && list.every(function (x) { return isObj(x) && typeof x.id === 'string' && /^[\w-]+$/.test(x.id); });
+    });
+  }
+
+  /* Swap in a whole new state (a restored backup, a reset, a save made in
+     another tab) and bring the theme, the timer and the screen into line. */
+  function adoptState(next) {
+    state = next;
+    applyTheme();
+    if (timerState().running) runTicker(); else { stopTicker(); paintTimer(); }
+    render();
+  }
+
   function importData(file) {
     var fr = new FileReader();
     fr.onload = function () {
+      var incoming;
       try {
-        var incoming = JSON.parse(fr.result);
-        if (!incoming || !Array.isArray(incoming.subjects)) throw new Error('bad file');
-        state = Object.assign(defaults(), incoming);
-        if (!state.timetable || !Array.isArray(state.timetable.slots)) state.timetable = defaults().timetable;
-        if (!state.timetable.classes) state.timetable.classes = {};
-        if (!Array.isArray(state.results)) state.results = [];
-        if (!Array.isArray(state.courses)) state.courses = [];
-        ['topics', 'books', 'customTopics', 'skipStrands'].forEach(function (k) {
-          if (!state[k] || typeof state[k] !== 'object') state[k] = {};
-        });
-        save();
-        render();
-        toast('Backup restored');
-      } catch (e) { toast('That file could not be read'); }
+        incoming = JSON.parse(fr.result);
+        if (!isObj(incoming) || !Array.isArray(incoming.subjects)) throw new Error('bad file');
+        incoming = normalise(Object.assign(defaults(), incoming));
+        if (!plainIds(incoming)) throw new Error('bad file');
+      } catch (e) { toast('That file could not be read'); return; }
+
+      var made = incoming.profile.lastBackup ? ' from ' + fmtDate(incoming.profile.lastBackup) : '';
+      if (!confirm('Replace everything in the app with this backup' + made + '? What is here now will be gone.')) return;
+
+      /* A timer that was running when the backup was made is not still running. */
+      if (incoming.timer) {
+        incoming.timer.running = false;
+        incoming.timer.swStart = 0;
+        incoming.timer.runStart = 0;
+        incoming.timer.quick = false;
+      }
+      adoptState(incoming);
+      save();
+      toast('Backup restored');
     };
     fr.readAsText(file);
   }
@@ -2618,8 +2799,8 @@
   var toastTimer = null;
   function toast(msg) {
     var t = $('#toast');
+    t.hidden = false;         // shown first, so screen readers announce the new text
     t.textContent = msg;
-    t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, 2400);
   }
@@ -2700,7 +2881,7 @@
         break;
 
       case 'toggle-hw': {
-        var h = state.homework.filter(function (x) { return x.id === id; })[0];
+        var h = byId(state.homework, id);
         if (h) {
           h.done = !h.done;
           h.doneAt = h.done ? new Date().toISOString() : null;
@@ -2726,7 +2907,7 @@
         var bTopic = topicById(bTopicId);
         state.plan.push({
           id: uid(), day: +$('#bDay').value, start: $('#bStart').value || '17:00',
-          mins: +$('#bMins').value || 45, subjectId: $('#bSubject').value || null,
+          mins: Math.max(5, Math.round(+$('#bMins').value) || 45), subjectId: $('#bSubject').value || null,
           topic: $('#bTopic').value.trim() || (bTopic ? topicRef(bTopic) : ''),
           topicId: bTopic ? bTopic.id : null
         });
@@ -2816,18 +2997,8 @@
       }
 
       case 'delete-subject': {
-        var dropped = subject(id);
-        Object.keys(state.topics).forEach(function (k) { if (k.indexOf(id + ':') === 0) delete state.topics[k]; });
-        (state.customTopics[id] || []).forEach(function (t) { delete state.topics[t.id]; });
-        delete state.customTopics[id];
-        delete state.books[id];
-        delete state.skipStrands[id];
-        Object.keys(state.timetable.classes).forEach(function (k) {
-          var cl = state.timetable.classes[k];
-          if (cl && cl.subjectId === id) { cl.subjectId = null; cl.name = dropped ? dropped.name : 'Class'; }
-        });
-        state.subjects = state.subjects.filter(function (x) { return x.id !== id; });
-        state.plan = state.plan.filter(function (b) { return b.subjectId !== id; });
+        if (!confirmRemoval([subject(id)])) break;
+        removeSubject(id);
         save(); closeModal(); render();
         break;
       }
@@ -2835,11 +3006,17 @@
       case 'seed-subjects': seedModal(); break;
       case 'save-seed': {
         var picked = $$('.seedbox').filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
-        var kept = state.subjects.filter(function (s2) { return picked.indexOf(s2.name) !== -1; });
+        /* Only a subject that had a box to untick can be unticked: one typed in
+           under its own name ("Maths", "Ag Science") is not on the list and stays. */
+        var unticked = state.subjects.filter(function (s2) {
+          return LC_SUBJECTS.indexOf(s2.name) !== -1 && picked.indexOf(s2.name) === -1;
+        });
+        if (!confirmRemoval(unticked)) break;
+        unticked.forEach(function (s2) { removeSubject(s2.id); });
+        var kept = state.subjects;
         picked.forEach(function (nm, i) {
           if (!kept.some(function (s3) { return s3.name === nm; })) kept.push(mkSubject(nm, 'H', kept.length + i));
         });
-        state.subjects = kept;
         state.seeded = true;
         save(); closeModal(); render();
         toast(kept.length + ' subjects saved');
@@ -2847,18 +3024,22 @@
       }
 
       case 'quick-study': {
-        timerState().subjectId = id;
+        /* A different subject also drops the topic picked for the old one, or the
+           session would be logged against a topic from another subject. */
+        var qt = timerState();
+        if (qt.subjectId !== id) { qt.subjectId = id; qt.topicId = null; qt.topic = ''; }
         save(true);
         go('study');
         break;
       }
       case 'edit-session': sessionModal(id); break;
       case 'save-session': {
-        var ses = state.sessions.filter(function (x) { return x.id === id; })[0];
+        var ses = byId(state.sessions, id);
         if (ses) {
           ses.subjectId = $('#sesSubject').value || null;
-          ses.mins = Math.max(1, +$('#sesMins').value || 1);
-          ses.at = ($('#sesWhen').value ? new Date($('#sesWhen').value) : new Date(ses.at)).toISOString();
+          ses.mins = Math.max(1, Math.round(+$('#sesMins').value) || 1);
+          var sesWhen = $('#sesWhen').value ? new Date($('#sesWhen').value) : null;
+          if (sesWhen && !isNaN(sesWhen.getTime())) ses.at = sesWhen.toISOString();
           var sesTopic = topicById($('#sesTopicPick').value || null);
           ses.topicId = sesTopic ? sesTopic.id : null;
           ses.topic = $('#sesTopic').value.trim() || (sesTopic ? sesTopic.title : '');
@@ -2869,12 +3050,16 @@
         closeModal(); render(); toast('Saved');
         break;
       }
-      case 'del-session':
+      case 'del-session': {
+        /* One tap on a small × should not be able to erase a record of work done. */
+        var doomed = byId(state.sessions, id);
+        if (doomed && !confirm('Delete this ' + dur(doomed.mins) + ' ' + subjectName(doomed.subjectId) + ' session?')) break;
         state.sessions = state.sessions.filter(function (s4) { return s4.id !== id; });
         save();
         if (!$('#modalBack').hidden) closeModal();
         render();
         break;
+      }
 
       case 'set-due':
         $('#mDue').value = localDatetimeValue(new Date(+el.dataset.at));
@@ -2892,7 +3077,7 @@
         var pct = +$('#rPct').value;
         if (!$('#rSubject').value) { toast('Pick a subject'); break; }
         if (isNaN(pct) || pct < 0 || pct > 100) { toast('Give a percentage between 0 and 100'); break; }
-        var res = id ? state.results.filter(function (x) { return x.id === id; })[0] : null;
+        var res = id ? byId(state.results, id) : null;
         if (!res) { res = { id: uid() }; state.results.push(res); }
         res.subjectId = $('#rSubject').value;
         res.label = $('#rLabel').value;
@@ -2912,7 +3097,7 @@
       case 'save-course': {
         var title = $('#coTitle').value.trim();
         if (!title) { toast('Name the course first'); break; }
-        var crs = id ? state.courses.filter(function (x) { return x.id === id; })[0] : null;
+        var crs = id ? byId(state.courses, id) : null;
         if (!crs) { crs = { id: uid() }; state.courses.push(crs); }
         crs.title = title;
         crs.code = $('#coCode').value.trim();
@@ -2927,13 +3112,16 @@
         save(true); closeModal(); render();
         break;
       case 'save-log': {
+        var lMins = Math.round(+$('#lMins').value);
+        if (!(lMins >= 1)) { toast('How many minutes did you do?'); break; }
         var when = $('#lWhen').value ? new Date($('#lWhen').value) : new Date();
+        if (isNaN(when.getTime())) when = new Date();
         var lTopicId = $('#lTopicPick').value || null;
         var lTopic = topicById(lTopicId);
         state.sessions.push({
           id: uid(), subjectId: $('#lSubject').value || null,
           topic: $('#lTopic').value.trim() || (lTopic ? lTopic.title : ''),
-          mins: +$('#lMins').value || 0, at: when.toISOString(),
+          mins: lMins, at: when.toISOString(),
           note: $('#lNote').value.trim(), topicId: lTopic ? lTopic.id : null
         });
         markStudied(lTopic ? lTopic.id : null, when.toISOString());
@@ -3098,7 +3286,12 @@
     /* Setup fields */
     var bind = function (sel, fn) { $(sel).addEventListener('change', fn); };
     bind('#setName', function () { state.profile.name = this.value.trim(); save(true); renderHeader(); });
-    bind('#setExam', function () { state.profile.examDate = this.value; save(); });
+    bind('#setExam', function () {
+      /* Cleared, it goes back to the usual start date rather than leaving the countdown with no date. */
+      state.profile.examDate = this.value || defaultExamDate();
+      this.value = state.profile.examDate;
+      save();
+    });
     bind('#setGoal', function () { state.profile.dailyGoal = Math.max(0, +this.value || 0); save(); });
     bind('#setStudyStart', function () { state.profile.studyStart = this.value; save(); });
     bind('#setStudyEnd', function () { state.profile.studyEnd = this.value; save(); });
@@ -3128,9 +3321,8 @@
     $('#importFile').addEventListener('change', function () { if (this.files[0]) importData(this.files[0]); this.value = ''; });
     $('#btnReset').addEventListener('click', function () {
       if (confirm('Delete all subjects, homework, sessions and plans on this device?')) {
-        state = defaults();
+        adoptState(defaults());
         save();
-        render();
         toast('Everything cleared');
       }
     });
@@ -3143,7 +3335,9 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      if (!$('#modalBack').hidden) closeModal();
+      /* The end-of-session card closes the same way however it is dismissed,
+         so its note is kept and a session started from Today returns there. */
+      if (!$('#modalBack').hidden) { if ($('#wrapNote')) finishWrapUp(); else closeModal(); }
       else if (document.body.classList.contains('focus-on')) focusMode(false);
     });
 
@@ -3155,7 +3349,15 @@
         render();
         if (timerState().running) runTicker();
         if (document.body.classList.contains('focus-on')) requestWakeLock();
+        checkForUpdate();
       }
+    });
+
+    /* The app open twice (a browser tab and the installed app, say): each holds
+       its own copy of the data, and whichever saved last used to overwrite the
+       other's work. A save made in one is now picked up by the other. */
+    window.addEventListener('storage', function (e) {
+      if (e.key === STORAGE_KEY && e.newValue) adoptState(load());
     });
 
     if (navigator.serviceWorker) {
@@ -3184,6 +3386,7 @@
       navigator.storage.persist().catch(function () {});
     }
 
+    watchForUpdates();
     initServiceWorker().then(rebuildReminders);
 
     /* Foreground safety net: check reminders every half minute. The page does it

@@ -1,14 +1,19 @@
 /* Service worker: offline shell + reminders that fire when the app is closed. */
-importScripts('./store.js?v=20');
+importScripts('./store.js?v=21');
 
-var CACHE = 'sixth-year-v20';
+var CACHE = 'sixth-year-v21';
 var SHELL = [
-  './', './index.html', './app.css?v=20', './app.js?v=20', './store.js?v=20', './syllabus.js?v=20',
-  './manifest.webmanifest', './icon.svg', './icon-maskable.svg', './badge.svg'
+  './', './index.html', './app.css?v=21', './app.js?v=21', './store.js?v=21', './syllabus.js?v=21',
+  './manifest.webmanifest', './icon.svg', './icon-maskable.svg', './badge.svg',
+  './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './badge-96.png'
 ];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () {
+  /* 'reload' goes to the network rather than the browser's own cache, so a new
+     version can never be built from a stale copy of the old page. */
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return c.addAll(SHELL.map(function (url) { return new Request(url, { cache: 'reload' }); }));
+  }).then(function () {
     return self.skipWaiting();
   }));
 });
@@ -43,8 +48,8 @@ function showReminders() {
       return self.registration.showNotification(r.title, {
         body: r.body,
         tag: r.tag,
-        icon: './icon.svg',
-        badge: './badge.svg',
+        icon: './icon-192.png',
+        badge: './badge-96.png',
         renotify: true,
         requireInteraction: false,
         data: { view: r.view, key: r.key },
@@ -76,7 +81,7 @@ self.addEventListener('push', function (e) {
     if (e.data) payload.body = e.data.text();
   }
   e.waitUntil(self.registration.showNotification(payload.title, {
-    body: payload.body, icon: './icon.svg', badge: './badge.svg',
+    body: payload.body, icon: './icon-192.png', badge: './badge-96.png',
     tag: payload.tag || 'push', data: { view: payload.view || 'today' }
   }));
 });

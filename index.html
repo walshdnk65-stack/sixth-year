@@ -11,9 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Sixth Year">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./app.css?v=20">
+<link rel="stylesheet" href="./app.css?v=21">
 </head>
 <body>
 
@@ -304,7 +304,7 @@
             <option value="larger">Larger</option>
           </select>
         </label>
-        <div class="switch"><span>Easier-reading font</span><span class="ctl"><input type="checkbox" id="setFont"></span></div>
+        <div class="switch"><label for="setFont">Easier-reading font</label><span class="ctl"><input type="checkbox" id="setFont"></span></div>
         <p class="hint" style="margin:10px 0 0">
           Uses Atkinson Hyperlegible if your device has it, otherwise Verdana, with looser
           line spacing.
@@ -325,16 +325,16 @@
       <div class="card">
         <div class="card-head"><h2>Notifications</h2></div>
         <p class="hint" id="permState"></p>
-        <div class="switch"><span>Homework reminders</span><span class="ctl"><input type="checkbox" id="ntfHomework"></span></div>
-        <div class="switch"><span>Daily plan</span>
+        <div class="switch"><label for="ntfHomework">Homework reminders</label><span class="ctl"><input type="checkbox" id="ntfHomework"></span></div>
+        <div class="switch"><label for="ntfDaily">Daily plan</label>
           <span class="ctl">
-            <input type="time" id="ntfDailyTime">
+            <input type="time" id="ntfDailyTime" aria-label="Time of the daily plan reminder">
             <input type="checkbox" id="ntfDaily">
           </span>
         </div>
-        <div class="switch"><span>Study block reminders</span><span class="ctl"><input type="checkbox" id="ntfBlocks"></span></div>
-        <div class="switch"><span>Weekly countdown</span><span class="ctl"><input type="checkbox" id="ntfWeekly"></span></div>
-        <div class="switch"><span>Timer alerts</span><span class="ctl"><input type="checkbox" id="ntfTimer"></span></div>
+        <div class="switch"><label for="ntfBlocks">Study block reminders</label><span class="ctl"><input type="checkbox" id="ntfBlocks"></span></div>
+        <div class="switch"><label for="ntfWeekly">Weekly countdown</label><span class="ctl"><input type="checkbox" id="ntfWeekly"></span></div>
+        <div class="switch"><label for="ntfTimer">Timer alerts</label><span class="ctl"><input type="checkbox" id="ntfTimer"></span></div>
         <label class="field" style="margin-top:14px">
           <span>Warn me before homework is due</span>
           <select id="ntfLead">
@@ -381,7 +381,7 @@
 
 </main>
 
-<nav class="tabs" id="tabs">
+<nav class="tabs" id="tabs" aria-label="Sections">
   <div class="brand"><img src="./icon.svg" alt=""> Sixth Year</div>
   <button data-view="today"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 4.2l8.5 6.4V20a.8.8 0 0 1-.8.8h-4.4v-6h-6.6v6H4.3a.8.8 0 0 1-.8-.8Z"/></svg></span>Today</button>
   <button data-view="homework"><span class="ico"><svg viewBox="0 0 24 24"><path d="M6 3.8h8.5L18.5 8v12.2H6Z"/><path d="M14 3.8V8h4.5M9 12.5h6M9 16h4"/></svg></span>Homework</button>
@@ -391,11 +391,11 @@
   <button data-view="setup"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.4v2.3M12 18.3v2.3M3.4 12h2.3M18.3 12h2.3M5.9 5.9l1.6 1.6M16.5 16.5l1.6 1.6M18.1 5.9l-1.6 1.6M7.5 16.5l-1.6 1.6"/></svg></span>Setup</button>
 </nav>
 
-<div class="modal-back" id="modalBack" hidden><div class="modal" id="modal"></div></div>
-<div class="toast" id="toast" hidden></div>
+<div class="modal-back" id="modalBack" hidden><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="./syllabus.js?v=20"></script>
-<script src="./store.js?v=20"></script>
-<script src="./app.js?v=20"></script>
+<script src="./syllabus.js?v=21"></script>
+<script src="./store.js?v=21"></script>
+<script src="./app.js?v=21"></script>
 </body>
 </html>
