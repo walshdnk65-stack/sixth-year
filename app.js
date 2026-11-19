@@ -448,22 +448,38 @@
     return { current: current, next: next };
   }
 
-  /* The next time this subject appears on the timetable, searched a fortnight out. */
-  function nextClassFor(subjectId, from) {
+  /* The coming times this subject is on the timetable, soonest first, searched
+     `days` days out (a fortnight unless told otherwise). */
+  function classTimesFor(subjectId, from, limit, days) {
     from = from || new Date();
-    var list = slotList();
-    for (var i = 0; i < 14; i++) {
+    var list = slotList(), out = [];
+    for (var i = 0; i < (days || 14) && out.length < limit; i++) {
       var day = addDays(from, i);
       var wd = day.getDay();
       if (SCHOOL_DAYS.indexOf(wd) === -1) continue;
-      for (var j = 0; j < list.length; j++) {
+      for (var j = 0; j < list.length && out.length < limit; j++) {
         var c = classAt(wd, list[j].id);
         if (!c || list[j].brk || c.subjectId !== subjectId) continue;
         var when = atTime(day, list[j].start);
-        if (when.getTime() > from.getTime()) return { at: when, slot: list[j] };
+        if (when.getTime() > from.getTime()) out.push({ at: when, slot: list[j] });
       }
     }
-    return null;
+    return out;
+  }
+
+  /* The next time this subject appears on the timetable, searched a fortnight out. */
+  function nextClassFor(subjectId, from) {
+    return classTimesFor(subjectId, from, 1)[0] || null;
+  }
+
+  /* Whether this subject has a class at any point on the given date. */
+  function hasClassOn(subjectId, date) {
+    var wd = date.getDay();
+    if (SCHOOL_DAYS.indexOf(wd) === -1) return false;
+    return slotList().some(function (sl) {
+      var c = classAt(wd, sl.id);
+      return !sl.brk && c && c.subjectId === subjectId;
+    });
   }
 
   function classDetail(entry, withEnd) {
@@ -2256,6 +2272,35 @@
     return out.join('');
   }
 
+  /* When the due date chosen falls on a day this subject has no class, a panel
+     drops down under it listing the subject's next classes to pick from instead.
+     Nothing shows for a subject that is not on the timetable at all. */
+  function duePickHtml(subjectId, due) {
+    if (!subjectId || !due || isNaN(due.getTime()) || hasClassOn(subjectId, due)) return '';
+    var times = classTimesFor(subjectId, new Date(), 5, 21);
+    if (!times.length) return '';
+    function day(d) { return DAY_SHORT[d.getDay()] + ' ' + fmtDate(d); }
+    return '<div class="due-pick">' +
+      '<p class="due-pick-head" id="duePickHead">No ' + esc(subjectName(subjectId)) + ' class on ' + esc(day(due)) +
+        '. Make it due at one of the next classes?</p>' +
+      '<div class="due-pick-list" role="group" aria-labelledby="duePickHead">' +
+        times.map(function (t, i) {
+          return '<button type="button" class="due-pick-opt" data-action="pick-class-due" data-at="' + t.at.getTime() + '">' +
+            '<span>' + esc(day(t.at)) + '</span>' +
+            '<span class="due-pick-time">' + esc(t.slot.start) + (i === 0 ? ' · next class' : '') + '</span></button>';
+        }).join('') +
+      '</div>' +
+      '<button type="button" class="btn small ghost" data-action="keep-due">Keep ' + esc(day(due)) + '</button>' +
+    '</div>';
+  }
+
+  /* Re-checks the chosen due date against the timetable and opens or closes the panel. */
+  function checkDueDate() {
+    var box = $('#duePick'), dueEl = $('#mDue'), subj = $('#mSubject');
+    if (!box || !dueEl || !subj) return;
+    box.innerHTML = dueEl.value ? duePickHtml(subj.value, new Date(dueEl.value)) : '';
+  }
+
   /* The subject of the class on the timetable right now, if it is one of the
      student's subjects — homework is usually written down in the class that set it. */
   function currentClassSubject() {
@@ -2281,6 +2326,7 @@
         '<label class="field"><span>Due</span><input type="datetime-local" id="mDue" value="' + localDatetimeValue(due) + '"></label>' +
         '<label class="field"><span>Minutes</span><input type="number" id="mEst" min="0" step="15" inputmode="numeric" value="' + (h && h.estMins ? h.estMins : 30) + '"></label>' +
       '</div>' +
+      '<div id="duePick" aria-live="polite"></div>' +
       '<div class="row" id="dueQuick" style="margin:8px 0 12px">' + dueQuickHtml(subjectId) + '</div>' +
       '<label class="field"><span>Notes</span><textarea id="mNotes" placeholder="Page numbers, what the teacher said, anything else">' + esc(h ? h.notes : '') + '</textarea></label>',
       (h ? '<button class="btn danger" data-action="delete-hw" data-id="' + h.id + '">Delete</button>' : '') +
@@ -3063,6 +3109,17 @@
 
       case 'set-due':
         $('#mDue').value = localDatetimeValue(new Date(+el.dataset.at));
+        $('#mDue').dataset.touched = '1';
+        checkDueDate();
+        break;
+      case 'pick-class-due':
+        $('#mDue').value = localDatetimeValue(new Date(+el.dataset.at));
+        $('#duePick').innerHTML = '';
+        $('#modal').focus();   // not the date box: on iPhone that reopens the picker
+        break;
+      case 'keep-due':
+        $('#duePick').innerHTML = '';
+        $('#modal').focus();
         break;
       case 'hw-from-class': {
         var nc = nextClassFor(id, new Date());
@@ -3138,6 +3195,13 @@
       if (quick) quick.innerHTML = dueQuickHtml(subjPick.value);
       var fillNote = $('#mSubjectNote');
       if (fillNote) fillNote.remove();
+      /* Only once a date has been chosen: the default date is not the student's pick. */
+      var dueField = $('#mDue');
+      if (dueField && dueField.dataset.touched) checkDueDate();
+    }
+    if (e.target.id === 'mDue') {
+      e.target.dataset.touched = '1';
+      checkDueDate();
     }
     var el = e.target.closest('[data-action="grade"]');
     if (el) {

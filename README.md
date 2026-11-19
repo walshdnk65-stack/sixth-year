@@ -60,7 +60,10 @@ it has to be picked before saving.
 
 The due-date field has quick buttons, the first of which is **the next time that subject
 is actually on** — "Next Maths class · Tue 09:40" — worked out from your timetable, since
-that is usually when homework is wanted. Open a class in the timetable and there is an
+that is usually when homework is wanted. Pick a date on which that subject has no class
+and a list drops down under the date showing its next five classes; tap one to make the
+homework due then, or *Keep* the date you chose. Subjects not on the timetable never show
+the list. Open a class in the timetable and there is an
 *Add homework for this class* link that opens the form already filled in.
 
 **Syllabus** (Plan → Syllabus) — the official specification for each of your subjects,
